@@ -266,6 +266,41 @@ trabajo al instalar la plantilla, no copiarse literal.
    del documento original (el agente "hace pasar" el test en vez de arreglar el bug).
    Preserva "verde = correcto".
 
+### 5.1 Anticipar `ask`/`deny` durante la planificación, no solo reaccionar
+
+Decisión que surgió de revisar el flujo completo con el dueño del proyecto: los
+3 tiers garantizan que el agente *se frene* en el momento correcto (`ask`) o
+*ni lo intente* (`deny`) — pero no garantizan que la persona sepa, **de
+antemano**, cuándo va a hacer falta su presencia o qué parte del trabajo va a
+quedar fuera del alcance del agente. Sin ese aviso anticipado, se entera a
+mitad de la implementación, justo cuando menos conviene interrumpir un proceso
+que venía corriendo solo.
+
+Por eso `AGENT_WORKFLOW.md.template` debe incluir, en la fase de
+"Descubrimiento" (antes de pedir "APROBADO PARA IMPLEMENTAR"), un paso
+explícito: cruzar el plan propuesto contra `.claude/settings.json` y reportar
+dos cosas por separado:
+
+- **Qué partes van a requerir aprobación en el momento (`ask`)** — para que la
+  persona sepa de antemano cuándo su presencia va a ser necesaria y pueda
+  planificar su disponibilidad en consecuencia.
+- **Qué partes son operaciones irreversibles bloqueadas de plano (`deny`)** —
+  detectadas *en la planificación*, no descubiertas a mitad de camino. Para
+  esas, el agente no se limita a decir "esto no lo puedo hacer": entrega un
+  artefacto preciso y ya pensado (migración, script, runbook con pasos y
+  validaciones) listo para que la persona lo ejecute por su cuenta, cuando
+  quiera, con sus propias salvaguardas (backup, ambiente de staging). La
+  diferencia frente a "andá y hacelo vos" es que el agente ya hizo el trabajo
+  de pensar y escribir la operación — a la persona le queda apretar el gatillo
+  con contexto completo, no investigar desde cero.
+
+Esto no afloja ningún `deny` de la sección anterior — sigue siendo una pared
+dura, por la misma razón que llevó a poner ahí los clientes de DB directos
+(decisión #2 arriba): el costo de un error en una operación irreversible es
+inaceptable, así que se le exige al agente el mismo cuidado que a la persona
+más prudente del equipo, no menos. Lo único que cambia es *cuándo* se entera
+la persona de que esa pared existe — antes de arrancar, no en medio del proceso.
+
 -----
 
 ## 6. Estrategia de ahorro de tokens
