@@ -1,60 +1,135 @@
 {
   "permissions": {
     "allow": [
+      "_comment_allow": "Operaciones que están pre-aprobadas en el plan (definidas de antemano)",
+
       "Read(**)",
       "Grep",
       "Glob",
+
+      "Write(docs/**)",
+      "Write(scripts/**)",
+      "Edit(scripts/**)",
+      "Edit(templates/**)",
+      "Edit(docs/**)",
+      "Edit(.claude/skills/**)",
+      "Edit(.claude/agents/**)",
+
       "Bash(git status)",
-      "Bash(git diff *)",
       "Bash(git log *)",
-      "Bash(git checkout -b agent/*)",
+      "Bash(git diff *)",
+      "Bash(git show)",
+      "Bash(git branch)",
+      "Bash(git ls-files)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout -b *)",
+
+      "Bash(bash -n *)",
+      "Bash(grep *)",
+      "Bash(grep -q *)",
+      "Bash(grep -qF *)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(sed -e *)",
+      "Bash(sed -i *)",
+      "Bash(tree *)",
+      "Bash(jq *)",
+      "Bash(diff *)",
+      "Bash(chmod +x *)",
+      "Bash(mkdir -p *)",
+      "Bash(cp -r *)",
+      "Bash(mv *)",
+
+      "Bash(pwd)",
+      "Bash(dirname *)",
+      "Bash(basename *)",
+      "Bash(echo *)",
+      "Bash(printf *)",
+      "Bash(test -f *)",
+      "Bash(test -d *)",
+      "Bash(test -z *)",
+      "Bash(source *)",
+      "Bash(command -v *)",
+      "Bash(wc -l *)",
+
       "Bash(npm run lint*)",
-      "Bash(npm test*)",
+      "Bash(npm run test*)",
       "Bash(npm run build*)",
       "Bash(npm run dev*)",
+
       "Skill(brainstorming)",
       "Skill(writing-plans)",
       "Skill(test-driven-development)",
       "Skill(systematic-debugging)",
       "Skill(requesting-code-review)",
       "Skill(qa)",
+
       "Task(db-query-agent)",
       "Task(qa-visual-agent)",
-      "Task(research-agent)",
-      "Write(docs/**)"
+      "Task(research-agent)"
     ],
+
     "ask": [
+      "_comment_ask": "Operaciones fuera del plan - requieren confirmación explícita",
+
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git reset *)",
+      "Bash(rm -rf *)",
+      "Bash(rm *)",
+
       "Bash(npm install*)",
       "Bash(npm uninstall*)",
+
+      "Edit(CLAUDE.md)",
+      "Edit(.claude/settings.json)",
+
       "Edit(**/migrations/**)",
       "Edit(**/models/**)",
-      "Edit(**/openapi.yaml)",
-      "Edit(**/contracts/**)",
       "Edit(**/auth/**)",
       "Edit(tests/**)",
       "Edit(.github/workflows/**)",
-      "Edit(**/deploy/**)",
-      "Bash(git push *)"
+      "Edit(**/deploy/**)"
     ],
+
     "deny": [
+      "_comment_deny": "Nunca permitir - riesgo de seguridad o destructivo",
+
+      "Bash(*sudo*)",
+      "Bash(*eval*)",
+      "Bash(*exec*)",
+
+      "Bash(npm install*)",
+      "Bash(npm uninstall*)",
+
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git branch -D main)",
+      "Bash(git branch -D master)",
+
       "Bash(*prod*deploy*)",
+      "Bash(*production*)",
       "Bash(*--env=production*)",
+
       "Bash(psql *)",
       "Bash(pg_dump *)",
       "Bash(mysql *)",
       "Bash(* DROP *)",
       "Bash(* TRUNCATE *)",
       "Bash(* DELETE FROM *)",
-      "Read(.env*)",
-      "Read(**/*.pem)",
-      "Read(**/secrets/**)",
+
       "Bash(aws *)",
       "Bash(*route53*)",
       "Bash(*certbot*)",
-      "Bash(git push * main)",
-      "Bash(git push --force*)",
-      "Bash(git branch -D main)",
-      "Bash(git branch -D master)"
+
+      "Read(.env*)",
+      "Read(**/*.pem)",
+      "Read(**/secrets/**)"
     ]
   }
 }
