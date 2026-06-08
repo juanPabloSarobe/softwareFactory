@@ -122,6 +122,38 @@ else
 fi
 
 # ============================================================================
+# Sección: hooks de notificación en ~/.claude/settings.json
+# ============================================================================
+
+echo ""
+echo "🔔 Hooks de notificación (por máquina, no por proyecto)"
+echo "   Avisan cuando Claude termina de trabajar o necesita atención."
+echo ""
+
+USER_SETTINGS="$HOME/.claude/settings.json"
+HOOKS_TEMPLATE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/templates/user-settings.json.template"
+
+if [[ -f "$USER_SETTINGS" ]] && jq -e '.hooks.Stop' "$USER_SETTINGS" >/dev/null 2>&1; then
+  echo "✅ Hooks de notificación ya configurados en $USER_SETTINGS"
+else
+  echo "  Requiere: macOS (usa osascript nativo, sin dependencias extras)"
+  echo ""
+  read -p "¿Configurar notificaciones nativas de macOS? (s/n) " -n 1 -r
+  echo ""
+
+  if [[ $REPLY =~ ^[Ss]$ ]]; then
+    if [[ ! -f "$USER_SETTINGS" ]]; then
+      echo "{}" > "$USER_SETTINGS"
+    fi
+
+    NEW_SETTINGS=$(jq --slurpfile hooks "$HOOKS_TEMPLATE" '. + {hooks: $hooks[0].hooks}' "$USER_SETTINGS")
+    echo "$NEW_SETTINGS" > "$USER_SETTINGS"
+    echo "  ✅ Hooks de notificación aplicados en $USER_SETTINGS"
+    echo "  ℹ️  Reiniciá Claude Code para que tomen efecto"
+  fi
+fi
+
+# ============================================================================
 # Sección MCP servers interactiva
 # ============================================================================
 
