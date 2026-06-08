@@ -292,14 +292,17 @@ saturado de cosas irrelevantes). Cuatro mecanismos:
 
 ## 7. Próximos pasos / artefactos a generar
 
-- [ ] `templates/settings.json.template` a partir de la sección 5
-- [ ] `templates/CLAUDE.md.template` y `templates/AGENT_WORKFLOW.md.template`
+- [x] `templates/settings.json.template` a partir de la sección 5
+- [x] `templates/CLAUDE.md.template` y `templates/AGENT_WORKFLOW.md.template`
       (siguiendo el criterio de "liviano que apunta", sección 6)
-- [ ] Definiciones de `db-query-agent`, `qa-visual-agent`, `research-agent` en `.claude/agents/`
-- [ ] Instalar las skills adicionales: Frontend Design, Remotion, Stop Slop, `/qa` (gstack)
+- [x] Definiciones de `db-query-agent`, `qa-visual-agent`, `research-agent` en `.claude/agents/`
+- [x] Vendorizar las skills propias del repo: Stop Slop, `/qa` (gstack)
+- [ ] Instalar por canal oficial las skills con licencia restrictiva: Frontend Design, Remotion
+      (no se pueden vendorizar — quedan documentadas en `docs/external-setup-checklist.md`)
 - [ ] Configurar conectores: GitHub MCP, Figma MCP, Playwright MCP, MCP de docs, Telegram Channels
-- [ ] `scripts/bootstrap.sh` para instalar/actualizar esta config en repos de trabajo
-- [ ] `templates/github/workflows/ci.yml` y `pull_request_template.md`
+      (necesitan credenciales vivas por máquina/cuenta — quedan documentados en `docs/external-setup-checklist.md`)
+- [x] `scripts/bootstrap.sh` para instalar/actualizar esta config en repos de trabajo
+- [x] `templates/github/workflows/ci.yml` y `pull_request_template.md`
 
 -----
 
