@@ -103,16 +103,22 @@ echo ""
 install_superpowers_if_needed
 echo ""
 
-read -p "¿Instalar skills adicionales? (frontend-design, remotion) (s/n) " -n 1 -r
-echo ""
-if [[ -z "$REPLY" ]]; then
-  echo "⚠️  Entrada cancelada o vacía" >&2
-  exit 1
-fi
+# Si hay TTY disponible, pregunta. Si no, por defecto no instala.
+if [[ -t 0 ]]; then
+  read -p "¿Instalar skills adicionales? (frontend-design, remotion) (s/n) " -n 1 -r
+  echo ""
+  if [[ -z "$REPLY" ]]; then
+    echo "⚠️  Entrada cancelada o vacía" >&2
+    exit 1
+  fi
 
-if [[ $REPLY =~ ^[Ss]$ ]]; then
-  install_frontend_design_if_wanted
-  install_remotion_if_wanted
+  if [[ $REPLY =~ ^[Ss]$ ]]; then
+    install_frontend_design_if_wanted
+    install_remotion_if_wanted
+  fi
+else
+  echo "⏭️  Modo no-TTY detectado (p.ej., CI/CD). Saltando instalación de skills opcionales."
+  echo "   Podés instalarlos luego manualmente en Claude Code con: /plugin install <skill>"
 fi
 
 # ============================================================================
