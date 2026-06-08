@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 # scripts/lib/merge-claude.sh
 
 # Detecta si el CLAUDE.md destino es "viejo" (del proyecto original, no mergeado con factory)
@@ -13,7 +14,9 @@ is_claude_md_old_format() {
   fi
 
   # Si contiene "{{PROJECT_NAME}}" o placeholders sin completar, también es candidato a rehacer
-  if grep -q "{{PROJECT_NAME}}\|{{ONE_PARAGRAPH}}\|{{STACK_SUMMARY}}" "$file"; then
+  if grep -qF "{{PROJECT_NAME}}" "$file" || \
+     grep -qF "{{ONE_PARAGRAPH}}" "$file" || \
+     grep -qF "{{STACK_SUMMARY}}" "$file"; then
     return 0
   fi
 
@@ -24,12 +27,29 @@ is_claude_md_old_format() {
 propose_claude_md_merge() {
   local target_dir="$1"
   local project_name="$2"
+
+  # Validar que SOURCE_DIR esté definida
+  if [[ -z "$SOURCE_DIR" ]]; then
+    echo "❌ Error: SOURCE_DIR no está definida" >&2
+    return 1
+  fi
+
   local template_file="$SOURCE_DIR/templates/CLAUDE.md.template"
+
+  # Validar que el template exista
+  if [[ ! -f "$template_file" ]]; then
+    echo "❌ Template no encontrado: $template_file" >&2
+    return 1
+  fi
+
   local existing_file="$target_dir/CLAUDE.md"
 
   if [[ ! -f "$existing_file" ]]; then
     # No existe, simplemente copiar template
-    sed "s/{{PROJECT_NAME}}/$project_name/g" "$template_file" > "$existing_file"
+    # Escapar caracteres especiales en $project_name para sed
+    local escaped_name
+    escaped_name=$(printf '%s\n' "$project_name" | sed -e 's/[\/&]/\\&/g')
+    sed "s/{{PROJECT_NAME}}/$escaped_name/g" "$template_file" > "$existing_file"
     echo "creado (desde template): $existing_file"
     return 0
   fi
@@ -52,10 +72,19 @@ propose_claude_md_merge() {
     fi
     echo ""
 
+    # Validar que sea 1, 2 o 3
+    if [[ ! "$REPLY" =~ ^[1-3]$ ]]; then
+      echo "❌ Opción inválida: '$REPLY' (esperado 1, 2 o 3)" >&2
+      return 1
+    fi
+
     case "$REPLY" in
       1)
         cp "$existing_file" "$existing_file.bak"
-        sed "s/{{PROJECT_NAME}}/$project_name/g" "$template_file" > "$existing_file"
+        # Escapar caracteres especiales en $project_name para sed
+        local escaped_name
+        escaped_name=$(printf '%s\n' "$project_name" | sed -e 's/[\/&]/\\&/g')
+        sed "s/{{PROJECT_NAME}}/$escaped_name/g" "$template_file" > "$existing_file"
         echo "✅ Reemplazado. Backup guardado en: $existing_file.bak"
         return 0
         ;;
