@@ -24,9 +24,19 @@ install_superpowers_if_needed() {
   echo "Se instala una sola vez a nivel de máquina, no por proyecto."
   echo ""
   read -p "¿Deseas instalar Superpowers ahora? (s/n) " -n 1 -r
+  if [[ $? -ne 0 ]]; then
+    echo ""
+    echo "⚠️  Entrada cancelada" >&2
+    return 1
+  fi
   echo ""
 
   if [[ $REPLY =~ ^[Ss]$ ]]; then
+    if ! command -v /plugin &> /dev/null; then
+      echo "❌ Error: Claude Code plugin manager no está disponible" >&2
+      echo "   ¿Estás dentro de Claude Code? Visitá: https://claude.com/claude-code" >&2
+      return 1
+    fi
     echo "Ejecutando: /plugin install superpowers@claude-plugins-official"
     /plugin install superpowers@claude-plugins-official
     if check_superpowers_installed; then
@@ -50,9 +60,19 @@ install_frontend_design_if_wanted() {
   echo "   Licencia: no se puede vendorizar, se instala desde marketplace"
   echo ""
   read -p "¿Deseas instalar frontend-design? (s/n) " -n 1 -r
+  if [[ $? -ne 0 ]]; then
+    echo ""
+    echo "⚠️  Entrada cancelada" >&2
+    return 1
+  fi
   echo ""
 
   if [[ $REPLY =~ ^[Ss]$ ]]; then
+    if ! command -v /plugin &> /dev/null; then
+      echo "❌ Error: Claude Code plugin manager no está disponible" >&2
+      echo "   ¿Estás dentro de Claude Code? Visitá: https://claude.com/claude-code" >&2
+      return 1
+    fi
     echo "Ejecutando: /plugin install frontend-design@claude-plugins-official"
     /plugin install frontend-design@claude-plugins-official
     echo "✅ Frontend Design instalado"
@@ -63,24 +83,31 @@ install_frontend_design_if_wanted() {
 
 # Guía instalación de remotion (licencia restrictiva)
 install_remotion_if_wanted() {
+  # Detectar si Node.js está disponible
+  if ! command -v npx &> /dev/null; then
+    echo ""
+    echo "⏭️  Remotion requiere Node.js + npx"
+    echo "   No encontrado. Visitá: https://nodejs.org/"
+    return 0
+  fi
+
   echo ""
   echo "📹 Remotion (generación de videos)"
   echo "   Uso: crear videos/animaciones programáticamente"
   echo "   Licencia: se instala con su propio instalador"
   echo ""
   read -p "¿Deseas instalar Remotion? (s/n) " -n 1 -r
+  if [[ $? -ne 0 ]]; then
+    echo ""
+    echo "⚠️  Entrada cancelada" >&2
+    return 1
+  fi
   echo ""
 
   if [[ $REPLY =~ ^[Ss]$ ]]; then
-    if command -v npx &> /dev/null; then
-      echo "Ejecutando: npx skills add remotion"
-      npx skills add remotion
-      echo "✅ Remotion instalado"
-    else
-      echo "❌ npx no encontrado. Necesitás Node.js instalado"
-      echo "   Visitá: https://nodejs.org/"
-      return 1
-    fi
+    echo "Ejecutando: npx skills add remotion"
+    npx skills add remotion
+    echo "✅ Remotion instalado"
   else
     echo "⏭️  Saltear por ahora"
   fi
@@ -89,27 +116,54 @@ install_remotion_if_wanted() {
 # Valida que la instalación básica esté completa
 validate_installation() {
   local target_dir="$1"
+
+  # Validar que target_dir sea proporcionado y sea un directorio válido
+  if [[ -z "$target_dir" ]]; then
+    echo "❌ Error: target_dir no puede estar vacío" >&2
+    return 1
+  fi
+
+  if [[ ! -d "$target_dir" ]]; then
+    echo "❌ Error: $target_dir no es un directorio válido" >&2
+    return 1
+  fi
+
   local has_error=0
 
   echo ""
   echo "🔍 Validación post-instalación:"
 
   if [[ -d "$target_dir/.claude/skills" ]]; then
-    echo "  ✅ .claude/skills exists"
+    if [[ -r "$target_dir/.claude/skills" ]]; then
+      echo "  ✅ .claude/skills exists and readable"
+    else
+      echo "  ❌ .claude/skills exists but not readable"
+      has_error=1
+    fi
   else
     echo "  ❌ .claude/skills missing"
     has_error=1
   fi
 
   if [[ -f "$target_dir/CLAUDE.md" ]]; then
-    echo "  ✅ CLAUDE.md exists"
+    if [[ -r "$target_dir/CLAUDE.md" ]]; then
+      echo "  ✅ CLAUDE.md exists and readable"
+    else
+      echo "  ❌ CLAUDE.md exists but not readable"
+      has_error=1
+    fi
   else
     echo "  ❌ CLAUDE.md missing"
     has_error=1
   fi
 
   if [[ -f "$target_dir/.claude/settings.json" ]]; then
-    echo "  ✅ .claude/settings.json exists"
+    if [[ -r "$target_dir/.claude/settings.json" ]]; then
+      echo "  ✅ .claude/settings.json exists and readable"
+    else
+      echo "  ❌ .claude/settings.json exists but not readable"
+      has_error=1
+    fi
   else
     echo "  ❌ .claude/settings.json missing"
     has_error=1
