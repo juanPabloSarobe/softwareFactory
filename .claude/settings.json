@@ -41,25 +41,12 @@
       "Bash(gh pr view *)",
       "Bash(gh pr list *)",
       "Bash(gh issue create*)",
-      "Bash(gh issue view *)",
-      "Bash(npm run lint*)",
-      "Bash(npm run test*)",
-      "Bash(npm run build*)",
-      "Bash(npm run dev*)",
-      "Skill(brainstorming)",
-      "Skill(writing-plans)",
-      "Skill(test-driven-development)",
-      "Skill(systematic-debugging)",
-      "Skill(requesting-code-review)",
-      "Skill(qa)",
-      "Task(db-query-agent)",
-      "Task(qa-visual-agent)",
-      "Task(research-agent)"
+      "Bash(gh issue view *)"
     ],
     "ask": [
       "Bash(rm *)",
-      "Bash(npm install*)",
-      "Bash(npm uninstall*)"
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)"
     ],
     "deny": [
       "Bash(*sudo*)",
@@ -73,16 +60,6 @@
       "Bash(git branch -D master)",
       "Bash(*prod*deploy*)",
       "Bash(*production*)",
-      "Bash(*--env=production*)",
-      "Bash(psql *)",
-      "Bash(pg_dump *)",
-      "Bash(mysql *)",
-      "Bash(* DROP *)",
-      "Bash(* TRUNCATE *)",
-      "Bash(* DELETE FROM *)",
-      "Bash(aws *)",
-      "Bash(*route53*)",
-      "Bash(*certbot*)",
       "Read(.env*)",
       "Read(**/*.pem)",
       "Read(**/secrets/**)"
