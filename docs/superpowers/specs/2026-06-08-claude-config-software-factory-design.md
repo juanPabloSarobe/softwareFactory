@@ -10,6 +10,29 @@
 
 -----
 
+## 0. Idioma de trabajo — regla crítica y transversal
+
+**El español es el idioma por defecto de absolutamente todo en la factory**:
+respuestas del agente, commits, mensajes de PR, comentarios de código,
+documentación, specs, planes, nombres descriptivos de ramas — cualquier texto
+con forma de oración o prosa. Esto vale tanto para este repo "meta" como para
+cada proyecto de trabajo que instale esta configuración.
+
+Dos excepciones explícitas, ninguna contradice la regla:
+- **Identificadores técnicos** (rutas, nombres de archivos/funciones/variables,
+  comandos, claves JSON/YAML, nombres de skills/agentes) se mantienen en el
+  idioma que corresponda al stack — la regla aplica a oraciones, no a tokens.
+- **Contenido vendorizado de terceros** bajo licencia MIT (`.claude/skills/`,
+  ver sección 2) se mantiene en su idioma original — traducirlo rompería la
+  trazabilidad con el upstream y complicaría la atribución de licencia.
+
+Esta regla se propaga de forma versionada vía `templates/CLAUDE.md.template`
+(sección 7): cada repo que corra `scripts/bootstrap.sh` la recibe como
+"no negociable" desde el primer día, y este mismo repo la declara en su propio
+`CLAUDE.md`.
+
+-----
+
 ## 1. Alcance y rol de este repo
 
 `softwareFactory` cumple un doble rol:

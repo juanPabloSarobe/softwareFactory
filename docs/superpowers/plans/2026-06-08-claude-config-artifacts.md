@@ -1,38 +1,49 @@
-# Claude Config Artifacts Implementation Plan
+# Plan de implementación: artefactos de configuración de Claude
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Para quien ejecute este plan como agente:** SUB-SKILL REQUERIDA: usá superpowers:subagent-driven-development (recomendada) o superpowers:executing-plans para implementar este plan tarea por tarea. Los pasos usan sintaxis de checkbox (`- [ ]`) para el seguimiento.
 
-**Goal:** Produce the versioned templates, subagent definitions, vendored skills and bootstrap script described in `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`, so the canonical Claude Code configuration for the Software Factory can be installed in any work repo.
+**Objetivo:** Producir las plantillas versionadas, definiciones de subagentes, skills vendorizadas y el script de bootstrap descritos en `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`, para que la configuración canónica de Claude Code de la Software Factory pueda instalarse en cualquier repo de trabajo.
 
-**Architecture:** Pure file-creation work (no application runtime). Each task creates one self-contained artifact (template, agent definition, vendored skill, or script) plus a verification command that proves the artifact is well-formed — the config-file equivalent of red/green: write a check that fails because the file doesn't exist, create the file, watch the check pass, commit.
+**Arquitectura:** Trabajo puro de creación de archivos (sin runtime de aplicación). Cada tarea crea un artefacto autocontenido (plantilla, definición de agente, skill vendorizada o script) más un comando de verificación que prueba que el artefacto está bien formado — el equivalente, para archivos de configuración, del rojo/verde: escribir un chequeo que falla porque el archivo no existe, crear el archivo, ver que el chequeo pasa, commitear.
 
-**Tech Stack:** Bash, JSON, YAML, Markdown with YAML frontmatter. Verification via `python3` (`json`/`yaml` modules, both confirmed present), `jq` (confirmed present), `bash -n`.
-
----
-
-## Before you start
-
-Two source repos get vendored under their MIT licenses (same pattern as the existing `.claude/skills/` from Superpowers, see commit `8e6c2d3`):
-- `https://github.com/garrytan/gstack` → its `qa/` directory (the `/qa` skill picked in spec section 2)
-- `https://github.com/hardikpandya/stop-slop` → the whole repo (the `stop-slop` skill)
-
-Both were verified MIT-licensed during planning. **Frontend Design** (Anthropic, proprietary "all rights reserved" terms) and **Remotion** (custom Remotion License, restrictive for large companies) are deliberately **not** vendored — Task 12 documents installing them through their official channels instead.
+**Stack técnico:** Bash, JSON, YAML, Markdown con frontmatter YAML. Verificación vía `python3` (módulos `json`/`yaml`, ambos confirmados presentes), `jq` (confirmado presente), `bash -n`.
 
 ---
 
-### Task 1: `templates/settings.json.template`
+## Antes de empezar
 
-**Files:**
-- Create: `templates/settings.json.template`
+Dos repos fuente se vendorizan bajo sus licencias MIT (mismo patrón que el `.claude/skills/` ya existente de Superpowers, ver commit `8e6c2d3`):
+- `https://github.com/garrytan/gstack` → su directorio `qa/` (la skill `/qa` elegida en la sección 2 de la spec)
+- `https://github.com/hardikpandya/stop-slop` → el repo completo (la skill `stop-slop`)
 
-- [ ] **Step 1: Write the verification check (it should fail — file doesn't exist yet)**
+Ambos se verificaron como licenciados bajo MIT durante la planificación. **Frontend Design** (Anthropic, términos propietarios "todos los derechos reservados") y **Remotion** (licencia Remotion personalizada, restrictiva para empresas grandes) deliberadamente **no** se vendorizan — la Tarea 12 documenta cómo instalarlos por sus canales oficiales en su lugar.
 
-Run: `python3 -m json.tool templates/settings.json.template > /dev/null && echo VALID_JSON`
-Expected: FAIL with "No such file or directory"
+**Idioma de los artefactos (decisión añadida en spec sección 0):** todo el
+contenido que nosotros redactamos — plantillas, definiciones de subagentes,
+notices, checklist, comentarios y mensajes de `bootstrap.sh` — va en español:
+es prosa que alguien va a leer, no identificadores técnicos. El contenido
+*vendorizado* de terceros (Tareas 9 y 10: los `SKILL.md`/`references/` que
+vienen de `gstack` y `stop-slop`, igual que las skills de Superpowers ya
+instaladas) se copia tal cual, en su idioma original — traducir contenido de
+upstream rompería la trazabilidad y la atribución de licencia. Lo único que
+redactamos nosotros dentro de esos directorios — el `THIRD-PARTY-NOTICE.md` —
+sí va en español.
 
-- [ ] **Step 2: Create the template**
+---
 
-Write `templates/settings.json.template`:
+### Tarea 1: `templates/settings.json.template`
+
+**Archivos:**
+- Crear: `templates/settings.json.template`
+
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar — el archivo todavía no existe)**
+
+Ejecutar: `python3 -m json.tool templates/settings.json.template > /dev/null && echo VALID_JSON`
+Resultado esperado: FALLA con "No such file or directory"
+
+- [ ] **Paso 2: Crear la plantilla**
+
+Escribir `templates/settings.json.template`:
 
 ```json
 {
@@ -97,173 +108,184 @@ Write `templates/settings.json.template`:
 }
 ```
 
-> Note: this is the generic baseline from spec section 5. It deliberately omits
-> repo-specific paths like `frontend/**`/`backend/**` — Task 11 (bootstrap.sh)
-> tells the operator to add those by hand for each repo's actual layout.
+> Nota: esta es la base genérica de la sección 5 de la spec. Omite a propósito
+> rutas específicas de cada repo como `frontend/**`/`backend/**` — la Tarea 11
+> (bootstrap.sh) le indica al operador agregarlas a mano según el layout real
+> de cada repo.
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run: `python3 -m json.tool templates/settings.json.template > /dev/null && echo VALID_JSON`
-Expected: `VALID_JSON`
+Ejecutar: `python3 -m json.tool templates/settings.json.template > /dev/null && echo VALID_JSON`
+Resultado esperado: `VALID_JSON`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add templates/settings.json.template
-git commit -m "Add settings.json template with 3-tier permission baseline"
+git commit -m "Agregar plantilla de settings.json con la base de permisos de 3 niveles"
 ```
 
 ---
 
-### Task 2: `templates/CLAUDE.md.template`
+### Tarea 2: `templates/CLAUDE.md.template`
 
-**Files:**
-- Create: `templates/CLAUDE.md.template`
+**Archivos:**
+- Crear: `templates/CLAUDE.md.template`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `test -f templates/CLAUDE.md.template && wc -l < templates/CLAUDE.md.template`
-Expected: FAIL ("No such file or directory")
+Ejecutar: `test -f templates/CLAUDE.md.template && wc -l < templates/CLAUDE.md.template`
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the template**
+- [ ] **Paso 2: Crear la plantilla**
 
-Write `templates/CLAUDE.md.template`:
+Escribir `templates/CLAUDE.md.template`:
 
 ```markdown
 # {{PROJECT_NAME}}
 
-> Agent configuration for {{PROJECT_NAME}}, part of the Skytrace / Software Factory
-> program. Keep this file under ~200 lines — anything long-form belongs in `docs/`,
-> linked from here, and read on demand (see "context engineering", spec section 6).
+> Configuración del agente para {{PROJECT_NAME}}, parte del programa Skytrace /
+> Software Factory. Mantené este archivo en menos de ~200 líneas — todo lo
+> extenso va en `docs/`, enlazado desde acá, y se lee bajo demanda (ver
+> "context engineering", spec sección 6).
 
-## What this project is
+## Idioma — regla crítica
+
+Comunicate siempre en español: respuestas al usuario, commits, PRs, comentarios
+de código, documentación nueva — cualquier texto en forma de oración. Los
+identificadores técnicos (rutas, nombres de funciones, comandos, variables,
+claves JSON) se mantienen en el idioma que corresponda al stack; la regla
+aplica a la prosa, no a los tokens.
+
+## Qué es este proyecto
 
 {{ONE_PARAGRAPH_DESCRIPTION}}
 
-## Where things live
+## Dónde está cada cosa
 
-- Architecture & decisions: `docs/superpowers/specs/`
-- Plans in flight: `docs/superpowers/plans/`
-- Workflow rules (branching, PRs, what needs approval): `AGENT_WORKFLOW.md`
-- Data access: never query the database directly — dispatch the `db-query-agent`
-  subagent. Direct DB clients are denied in `.claude/settings.json` on purpose.
+- Arquitectura y decisiones: `docs/superpowers/specs/`
+- Planes en curso: `docs/superpowers/plans/`
+- Reglas de flujo de trabajo (ramas, PRs, qué necesita aprobación): `AGENT_WORKFLOW.md`
+- Acceso a datos: nunca consultes la base de datos directamente — despachá al
+  subagente `db-query-agent`. Los clientes de BD directos están denegados en
+  `.claude/settings.json` a propósito.
 
 ## Stack
 
 {{STACK_SUMMARY}}
 
-## Commands
+## Comandos
 
 - Lint: `{{LINT_COMMAND}}`
 - Test: `{{TEST_COMMAND}}`
 - Build: `{{BUILD_COMMAND}}`
-- Dev server: `{{DEV_COMMAND}}`
+- Servidor de desarrollo: `{{DEV_COMMAND}}`
 
-## Non-negotiables
+## No negociables
 
-- TDD: red, green, refactor. Never write implementation before a failing test.
-- Every bug found becomes a regression test — no exceptions (see `qa-visual-agent`).
-- Tests are not yours to weaken. Editing `tests/**` requires asking first.
-- Never work on `main`. Branch as `agent/issue-<N>-<short-description>`.
-- Small checkpoints: stop at "a PR that works", not "the whole epic".
+- TDD: red, green, refactor. Nunca escribas implementación antes de un test que falle.
+- Todo bug encontrado se convierte en test de regresión — sin excepciones (ver `qa-visual-agent`).
+- Los tests no son tuyos para debilitar. Editar `tests/**` requiere preguntar antes.
+- Nunca trabajes sobre `main`. Crea ramas como `agent/issue-<N>-<descripción-corta>`.
+- Checkpoints chicos: parar en "un PR que funciona", no en "la épica completa".
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run: `test -f templates/CLAUDE.md.template && wc -l < templates/CLAUDE.md.template`
-Expected: a number less than `60` (well under the ~200 line budget the template itself prescribes)
+Ejecutar: `test -f templates/CLAUDE.md.template && wc -l < templates/CLAUDE.md.template`
+Resultado esperado: un número menor que `65` (bien por debajo del presupuesto de ~200 líneas que la propia plantilla establece)
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add templates/CLAUDE.md.template
-git commit -m "Add CLAUDE.md template (lightweight, points to docs per context-engineering criteria)"
+git commit -m "Agregar plantilla de CLAUDE.md (liviana, apunta a docs según el criterio de context engineering)"
 ```
 
 ---
 
-### Task 3: `templates/AGENT_WORKFLOW.md.template`
+### Tarea 3: `templates/AGENT_WORKFLOW.md.template`
 
-**Files:**
-- Create: `templates/AGENT_WORKFLOW.md.template`
+**Archivos:**
+- Crear: `templates/AGENT_WORKFLOW.md.template`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `grep -c "APROBADO PARA IMPLEMENTAR" templates/AGENT_WORKFLOW.md.template`
-Expected: FAIL ("No such file or directory")
+Ejecutar: `grep -c "APROBADO PARA IMPLEMENTAR" templates/AGENT_WORKFLOW.md.template`
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the template**
+- [ ] **Paso 2: Crear la plantilla**
 
-Write `templates/AGENT_WORKFLOW.md.template`:
+Escribir `templates/AGENT_WORKFLOW.md.template`:
 
 ```markdown
-# Agent Workflow — {{PROJECT_NAME}}
+# Flujo de trabajo del agente — {{PROJECT_NAME}}
 
-## General rules
+## Reglas generales
 
-- Never work directly on `main`. Branch as `agent/issue-<N>-<short-description>`.
-- Never merge your own PRs. Never deploy. Never touch production.
-- Never modify `.env` files or add dependencies without explicit approval.
-- Stay in scope — don't touch the backend on a frontend-only task, or vice versa.
+- Nunca trabajes directamente sobre `main`. Crea ramas como `agent/issue-<N>-<descripción-corta>`.
+- Nunca mergees tus propios PRs. Nunca despliegues. Nunca toques producción.
+- Nunca modifiques archivos `.env` ni agregues dependencias sin aprobación explícita.
+- Mantenete dentro del alcance — no toques el backend en una tarea de frontend, ni viceversa.
 
-## Discovery (before writing any code)
+## Descubrimiento (antes de escribir código)
 
-1. Read the linked issue/spec completely.
-2. Explore the related files. Follow existing patterns — don't invent new ones.
-3. Ask whatever is needed to remove ambiguity, grouped as: functional, technical,
-   data, UX, security questions.
-4. Propose a plan and wait for the literal words **APROBADO PARA IMPLEMENTAR**
-   before writing any implementation code.
+1. Leé completo el issue/spec vinculado.
+2. Explorá los archivos relacionados. Seguí los patrones existentes — no inventes nuevos.
+3. Preguntá lo que haga falta para eliminar ambigüedad, agrupado en preguntas
+   funcionales, técnicas, de datos, de UX y de seguridad.
+4. Proponé un plan y esperá las palabras literales **APROBADO PARA IMPLEMENTAR**
+   antes de escribir cualquier código de implementación.
 
-## Implementation
+## Implementación
 
-- TDD: write the failing test, watch it fail, write minimal code, watch it pass, commit.
-- Keep the run scoped to one checkpoint — "a PR that works", not an entire epic.
-- Convert every bug you find — yours or pre-existing — into a regression test.
+- TDD: escribí el test que falla, miralo fallar, escribí el código mínimo, miralo pasar, commiteá.
+- Mantené el alcance acotado a un checkpoint — "un PR que funciona", no una épica completa.
+- Convertí cada bug que encuentres — tuyo o preexistente — en un test de regresión.
 
-## Validation (before opening a PR)
+## Validación (antes de abrir un PR)
 
-- Run lint, tests, and build.
-- Confirm the app starts: backend health check responds, frontend loads.
-- If there is a UI change, dispatch `qa-visual-agent` for visual QA.
+- Corré lint, tests y build.
+- Confirmá que la app arranca: el health check del backend responde, el frontend carga.
+- Si hay un cambio de UI, despachá `qa-visual-agent` para QA visual.
 
-## Delivery
+## Entrega
 
-Open a PR that includes:
-- Functional summary — what changed and why
-- Files modified
-- Validation results: lint / test / build / QA — pass or fail, explicitly
-- Risks and pending items
-- Preview URL, if there is one
+Abrí un PR que incluya:
+- Resumen funcional — qué cambió y por qué
+- Archivos modificados
+- Resultados de validación: lint / test / build / QA — pasó o falló, explícitamente
+- Riesgos y pendientes
+- URL de preview, si existe
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run: `grep -c "APROBADO PARA IMPLEMENTAR" templates/AGENT_WORKFLOW.md.template`
-Expected: `1`
+Ejecutar: `grep -c "APROBADO PARA IMPLEMENTAR" templates/AGENT_WORKFLOW.md.template`
+Resultado esperado: `1`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add templates/AGENT_WORKFLOW.md.template
-git commit -m "Add AGENT_WORKFLOW.md template based on the Phase 1 skeleton from the original plan"
+git commit -m "Agregar plantilla de AGENT_WORKFLOW.md basada en el esqueleto de Fase 1 del plan original"
 ```
 
 ---
 
-### Task 4: `templates/github/workflows/ci.yml`
+### Tarea 4: `templates/github/workflows/ci.yml`
 
-**Files:**
-- Create: `templates/github/workflows/ci.yml`
+**Archivos:**
+- Crear: `templates/github/workflows/ci.yml`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `python3 -c "import yaml; yaml.safe_load(open('templates/github/workflows/ci.yml'))" && echo VALID_YAML`
-Expected: FAIL ("No such file or directory")
+Ejecutar: `python3 -c "import yaml; yaml.safe_load(open('templates/github/workflows/ci.yml'))" && echo VALID_YAML`
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the workflow file**
+- [ ] **Paso 2: Crear el archivo de workflow**
 
-Write `templates/github/workflows/ci.yml`:
+Escribir `templates/github/workflows/ci.yml`:
 
 ```yaml
 name: CI
@@ -287,76 +309,76 @@ jobs:
       - run: npm run build --if-present
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run: `python3 -c "import yaml; yaml.safe_load(open('templates/github/workflows/ci.yml'))" && echo VALID_YAML`
-Expected: `VALID_YAML`
+Ejecutar: `python3 -c "import yaml; yaml.safe_load(open('templates/github/workflows/ci.yml'))" && echo VALID_YAML`
+Resultado esperado: `VALID_YAML`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add templates/github/workflows/ci.yml
-git commit -m "Add CI workflow template (pre-merge validation: lint, test, build)"
+git commit -m "Agregar plantilla de workflow de CI (validación pre-merge: lint, test, build)"
 ```
 
 ---
 
-### Task 5: `templates/github/pull_request_template.md`
+### Tarea 5: `templates/github/pull_request_template.md`
 
-**Files:**
-- Create: `templates/github/pull_request_template.md`
+**Archivos:**
+- Crear: `templates/github/pull_request_template.md`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `grep -c "Preview URL" templates/github/pull_request_template.md`
-Expected: FAIL ("No such file or directory")
+Ejecutar: `grep -c "URL de preview" templates/github/pull_request_template.md`
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the PR template**
+- [ ] **Paso 2: Crear la plantilla de PR**
 
-Write `templates/github/pull_request_template.md`:
+Escribir `templates/github/pull_request_template.md`:
 
 ```markdown
-## Summary
+## Resumen
 
-<!-- What changed and why, in 1-3 sentences -->
+<!-- Qué cambió y por qué, en 1-3 oraciones -->
 
-## Validation
+## Validación
 
-- [ ] Backend starts: OK / Error
-- [ ] Frontend starts: OK / Error
+- [ ] Arranca el backend: OK / Error
+- [ ] Arranca el frontend: OK / Error
 - [ ] Health check: OK / Error
 - [ ] Lint / Build / Tests: OK / Error
-- [ ] Visual QA (`qa-visual-agent`): OK / Observations
+- [ ] QA visual (`qa-visual-agent`): OK / Observaciones
 
-Preview URL:
+URL de preview:
 
-## Risks / pending items
+## Riesgos / pendientes
 
-<!-- Anything the reviewer should pay extra attention to -->
+<!-- Cualquier cosa a la que quien revisa deba prestarle especial atención -->
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run: `grep -c "Preview URL" templates/github/pull_request_template.md`
-Expected: `1`
+Ejecutar: `grep -c "URL de preview" templates/github/pull_request_template.md`
+Resultado esperado: `1`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add templates/github/pull_request_template.md
-git commit -m "Add PR template matching the validation block from the original plan (section 10.4)"
+git commit -m "Agregar plantilla de PR que replica el bloque de validación del plan original (sección 10.4)"
 ```
 
 ---
 
-### Task 6: `.claude/agents/db-query-agent.md`
+### Tarea 6: `.claude/agents/db-query-agent.md`
 
-**Files:**
-- Create: `.claude/agents/db-query-agent.md`
+**Archivos:**
+- Crear: `.claude/agents/db-query-agent.md`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run:
+Ejecutar:
 ```bash
 python3 - <<'EOF'
 import re
@@ -369,69 +391,72 @@ assert 'description' in data
 print('VALID_AGENT_DEF')
 EOF
 ```
-Expected: FAIL ("No such file or directory")
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the agent definition**
+- [ ] **Paso 2: Crear la definición del agente**
 
-Write `.claude/agents/db-query-agent.md`:
+Escribir `.claude/agents/db-query-agent.md`:
 
 ```markdown
 ---
 name: db-query-agent
-description: Use when a task needs an answer grounded in production data (read-replica only) — translates a natural-language question into an audited read-only query and returns a synthesized answer, never raw rows.
+description: Usalo cuando una tarea necesite una respuesta basada en datos de producción (sólo réplica de lectura) — traduce una pregunta en lenguaje natural a una consulta auditada de solo lectura y devuelve una respuesta sintetizada, nunca filas crudas.
 tools: Bash
 ---
 
-You are the only interface between the development agent and the production
-database read replica. This boundary exists on purpose (see spec section 7 /
-`docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`):
-the credential that can reach the data lives only inside your tool, never in the
-parent agent's context.
+Sos la única interfaz entre el agente de desarrollo y la réplica de lectura de
+la base de datos de producción. Este límite existe a propósito (ver spec
+sección 7 / `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`):
+la credencial que puede llegar a los datos vive sólo dentro de tu herramienta,
+nunca en el contexto del agente padre.
 
-## Rules — non-negotiable
+## Reglas — no negociables
 
-- Query exclusively through `scripts/db-query.sh`. Never invoke `psql`, `pg_dump`,
-  `mysql`, or any other direct database client — those are denied in
-  `.claude/settings.json` precisely so this is the only path.
-- Never return raw query results. Summarize: row counts, aggregates, at most 5
-  example rows, and what they mean for the question that was asked.
-- If the question would require writing or altering schema, refuse and explain
-  that this path is intentionally read-only.
-- If a result set is large, describe its shape (row count, columns, ranges)
-  instead of dumping it — the parent agent's context is precious.
+- Consultá exclusivamente a través de `scripts/db-query.sh`. Nunca invoques
+  `psql`, `pg_dump`, `mysql` ni ningún otro cliente directo de base de datos —
+  están denegados en `.claude/settings.json` precisamente para que este sea el
+  único camino posible.
+- Nunca devuelvas resultados crudos de la consulta. Resumí: cantidad de filas,
+  agregados, como máximo 5 filas de ejemplo, y qué significan para la pregunta
+  que se hizo.
+- Si la pregunta requeriría escribir o alterar el esquema, rechazala y explicá
+  que este camino es de solo lectura a propósito.
+- Si un resultado es grande, describí su forma (cantidad de filas, columnas,
+  rangos) en lugar de volcarlo entero — el contexto del agente padre es valioso.
 
-## Process
+## Proceso
 
-1. Translate the natural-language question into a single `SELECT` statement,
-   scoped to the smallest set of tables/columns that answers it.
-2. Run: `scripts/db-query.sh "<your SELECT statement>"`
-3. Read the output (row-capped result + the audit log entry it produced).
-4. Reply with a short synthesis: what the data shows, the relevant numbers, and
-   any caveats (e.g., "sample of N of M rows", "replica may lag the primary").
+1. Traducí la pregunta en lenguaje natural a una única sentencia `SELECT`,
+   acotada al conjunto más chico de tablas/columnas que la responda.
+2. Ejecutá: `scripts/db-query.sh "<tu sentencia SELECT>"`
+3. Leé la salida (resultado limitado en filas + la entrada de auditoría que generó).
+4. Respondé con una síntesis corta: qué muestran los datos, los números
+   relevantes, y cualquier salvedad (p. ej. "muestra de N de M filas", "la
+   réplica puede estar desfasada respecto de la primaria").
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run the same script as Step 1.
-Expected: `VALID_AGENT_DEF`
+Ejecutar el mismo script que en el Paso 1.
+Resultado esperado: `VALID_AGENT_DEF`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add .claude/agents/db-query-agent.md
-git commit -m "Add db-query-agent: the narrow, audited interface to production data"
+git commit -m "Agregar db-query-agent: la interfaz angosta y auditada hacia los datos de producción"
 ```
 
 ---
 
-### Task 7: `.claude/agents/qa-visual-agent.md`
+### Tarea 7: `.claude/agents/qa-visual-agent.md`
 
-**Files:**
-- Create: `.claude/agents/qa-visual-agent.md`
+**Archivos:**
+- Crear: `.claude/agents/qa-visual-agent.md`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run:
+Ejecutar:
 ```bash
 python3 - <<'EOF'
 import re, yaml
@@ -442,68 +467,71 @@ assert 'description' in data
 print('VALID_AGENT_DEF')
 EOF
 ```
-Expected: FAIL ("No such file or directory")
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the agent definition**
+- [ ] **Paso 2: Crear la definición del agente**
 
-Write `.claude/agents/qa-visual-agent.md`:
+Escribir `.claude/agents/qa-visual-agent.md`:
 
 ```markdown
 ---
 name: qa-visual-agent
-description: Use after implementing a UI change to visually verify it against the local preview with a real browser, and to turn every bug found into a regression test rather than a report.
+description: Usalo después de implementar un cambio de UI para verificarlo visualmente contra el preview local con un navegador real, y para convertir cada bug encontrado en un test de regresión en lugar de un simple reporte.
 tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
-You run visual QA against the local preview using the `qa` skill (Playwright-backed)
-and convert every issue you find into a regression test. "Looks fine" is not a
-finding — a passing or failing test is.
+Corrés QA visual contra el preview local usando la skill `qa` (basada en
+Playwright) y convertís cada problema que encontrás en un test de regresión.
+"Se ve bien" no es un hallazgo — un test que pasa o que falla, sí lo es.
 
-## Process
+## Proceso
 
-1. Confirm the local servers are already running. If you're not sure, ask the
-   parent agent rather than starting them yourself — that's its job, not yours.
-2. Invoke the `qa` skill: `quick` mode for small changes, `regression` mode when
-   targeting a specific area, `full` only when explicitly asked to.
-3. For every issue you find:
-   a. Write a failing regression test that reproduces it, in the project's
-      existing test framework and location — follow its conventions.
-   b. Run it and confirm it fails for the right reason (not a setup error).
-   c. Record the issue and the new test's file path. Do not fix the application
-      code — that decision belongs to whoever requested the QA pass.
-4. Reply with a structured summary: pass/fail per view checked, screenshot paths,
-   console errors observed, and the list of regression tests you created.
+1. Confirmá que los servidores locales ya están corriendo. Si no estás
+   seguro, preguntale al agente padre en lugar de levantarlos vos mismo — eso
+   es trabajo suyo, no tuyo.
+2. Invocá la skill `qa`: modo `quick` para cambios chicos, modo `regression`
+   cuando apuntás a un área específica, `full` solo si te lo piden explícitamente.
+3. Por cada problema que encuentres:
+   a. Escribí un test de regresión que falle y lo reproduzca, en el framework
+      de tests y la ubicación que ya usa el proyecto — segui sus convenciones.
+   b. Corré el test y confirmá que falla por la razón correcta (no por un
+      error de configuración).
+   c. Registrá el problema y la ruta del nuevo test. No arregles el código de
+      la aplicación — esa decisión le corresponde a quien pidió el QA.
+4. Respondé con un resumen estructurado: pasa/falla por vista revisada, rutas
+   de capturas de pantalla, errores de consola observados, y la lista de tests
+   de regresión que creaste.
 
-## What you must never do
+## Lo que nunca debés hacer
 
-- Modify application source code.
-- Weaken, skip, or delete an existing test to make a check pass.
-- Report something as "OK" without the screenshot or console-log evidence that
-  backs it up — evidence before assertions, always (see `verification-before-completion`).
+- Modificar el código fuente de la aplicación.
+- Debilitar, saltear o borrar un test existente para que un chequeo pase.
+- Reportar algo como "OK" sin la captura de pantalla o el log de consola que lo
+  respalde — evidencia antes que afirmaciones, siempre (ver `verification-before-completion`).
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run the same script as Step 1.
-Expected: `VALID_AGENT_DEF`
+Ejecutar el mismo script que en el Paso 1.
+Resultado esperado: `VALID_AGENT_DEF`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add .claude/agents/qa-visual-agent.md
-git commit -m "Add qa-visual-agent: visual QA that produces regression tests, not just reports"
+git commit -m "Agregar qa-visual-agent: QA visual que produce tests de regresión, no solo reportes"
 ```
 
 ---
 
-### Task 8: `.claude/agents/research-agent.md`
+### Tarea 8: `.claude/agents/research-agent.md`
 
-**Files:**
-- Create: `.claude/agents/research-agent.md`
+**Archivos:**
+- Crear: `.claude/agents/research-agent.md`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run:
+Ejecutar:
 ```bash
 python3 - <<'EOF'
 import re, yaml
@@ -514,69 +542,69 @@ assert 'description' in data
 print('VALID_AGENT_DEF')
 EOF
 ```
-Expected: FAIL ("No such file or directory")
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the agent definition**
+- [ ] **Paso 2: Crear la definición del agente**
 
-Write `.claude/agents/research-agent.md`:
+Escribir `.claude/agents/research-agent.md`:
 
 ```markdown
 ---
 name: research-agent
-description: Use when you need to digest a long document, spec, or third-party API reference before starting work, without loading the whole thing into the main conversation — returns a focused brief, not a copy.
+description: Usalo cuando necesites digerir un documento largo, una spec, o la referencia de una API de terceros antes de empezar a trabajar, sin cargar todo eso en la conversación principal — devuelve un resumen enfocado, no una copia.
 tools: Read, Grep, Glob, WebFetch
 ---
 
-You read long source material in an isolated context and return only the parts
-relevant to the question you were asked. Your entire value is that the parent
-agent doesn't have to read what you read.
+Leés material fuente extenso en un contexto aislado y devolvés sólo las partes
+relevantes para la pregunta que te hicieron. Todo tu valor está en que el
+agente padre no tenga que leer lo que vos leíste.
 
-## Process
+## Proceso
 
-1. Restate the exact question you were asked to answer. If it's ambiguous, say
-   so explicitly rather than guessing and producing a generic summary — a vague
-   brief defeats the purpose of dispatching you.
-2. Read the source material you were pointed at (file path or URL).
-3. Extract only the sections that bear on that question.
-4. Reply with:
-   - A direct answer (2-5 sentences)
-   - The specific quotes or sections that support it, with file:line or section
-     references the parent agent can jump to if it needs more
-   - Anything you found that complicates or contradicts a simple answer
+1. Repetí la pregunta exacta que te pidieron responder. Si es ambigua, decilo
+   explícitamente en lugar de adivinar y producir un resumen genérico — un
+   resumen vago anula el propósito de haberte despachado.
+2. Leé el material fuente al que te apuntaron (ruta de archivo o URL).
+3. Extraé sólo las secciones que se relacionan con esa pregunta.
+4. Respondé con:
+   - Una respuesta directa (2-5 oraciones)
+   - Las citas o secciones específicas que la respaldan, con referencias de
+     archivo:línea o sección a las que el agente padre pueda saltar si necesita más
+   - Cualquier cosa que hayas encontrado que complique o contradiga una respuesta simple
 
-## What you must never do
+## Lo que nunca debés hacer
 
-- Paste the source document back, in whole or in large part.
-- Answer questions you weren't asked ("while I was in there, I also noticed...") —
-  staying scoped is what makes you cheap to use.
+- Pegar de vuelta el documento fuente, completo o en gran parte.
+- Responder preguntas que no te hicieron ("ya que estaba ahí, también noté que...") —
+  mantenerte en el alcance es lo que te hace barato de usar.
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run the same script as Step 1.
-Expected: `VALID_AGENT_DEF`
+Ejecutar el mismo script que en el Paso 1.
+Resultado esperado: `VALID_AGENT_DEF`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add .claude/agents/research-agent.md
-git commit -m "Add research-agent: digests long material in isolation, returns a brief"
+git commit -m "Agregar research-agent: digiere material extenso en aislamiento y devuelve un resumen"
 ```
 
 ---
 
-### Task 9: Vendor the `qa` skill from gstack
+### Tarea 9: Vendorizar la skill `qa` de gstack
 
-**Files:**
-- Create: `.claude/skills/qa/` (copied from `garrytan/gstack`, MIT licensed)
-- Create: `.claude/skills/qa/THIRD-PARTY-NOTICE.md`
+**Archivos:**
+- Crear: `.claude/skills/qa/` (copiado de `garrytan/gstack`, licencia MIT)
+- Crear: `.claude/skills/qa/THIRD-PARTY-NOTICE.md`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `test -f .claude/skills/qa/SKILL.md && grep -c "^name: qa$" .claude/skills/qa/SKILL.md`
-Expected: FAIL (`.claude/skills/qa/SKILL.md` doesn't exist)
+Ejecutar: `test -f .claude/skills/qa/SKILL.md && grep -c "^name: qa$" .claude/skills/qa/SKILL.md`
+Resultado esperado: FALLA (`.claude/skills/qa/SKILL.md` no existe)
 
-- [ ] **Step 2: Clone gstack, copy the `qa/` skill directory and its LICENSE**
+- [ ] **Paso 2: Clonar gstack, copiar el directorio de la skill `qa/` y su LICENSE**
 
 ```bash
 git clone --depth 1 https://github.com/garrytan/gstack.git /tmp/gstack-vendor
@@ -586,58 +614,62 @@ rm -rf .claude/skills/qa/.git
 rm -rf /tmp/gstack-vendor
 ```
 
-- [ ] **Step 3: Write the third-party notice**
+- [ ] **Paso 3: Escribir el aviso de terceros**
 
-Write `.claude/skills/qa/THIRD-PARTY-NOTICE.md`:
+Escribir `.claude/skills/qa/THIRD-PARTY-NOTICE.md`:
 
 ```markdown
-# Third-party notice
+# Aviso de terceros
 
-This directory is vendored from the `qa` skill in
-[garrytan/gstack](https://github.com/garrytan/gstack) (MIT licensed,
-copyright Garry Tan), per the design decision in
+Este directorio está vendorizado desde la skill `qa` de
+[garrytan/gstack](https://github.com/garrytan/gstack) (licencia MIT,
+copyright de Garry Tan), según la decisión de diseño documentada en
 `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`
-(spec section 2: gstack's `/qa` is the one piece — Playwright-backed visual QA
-that auto-generates regression tests — that Superpowers doesn't cover).
+(spec sección 2: el `/qa` de gstack es la única pieza — QA visual basado en
+Playwright que genera automáticamente tests de regresión — que Superpowers no cubre).
 
-Original license follows.
+El contenido de la skill (`SKILL.md` y archivos asociados) se mantiene en su
+idioma original: es contenido vendorizado de upstream, y traducirlo rompería
+la trazabilidad con la fuente y la atribución de licencia (ver spec sección 0).
+
+A continuación, la licencia original.
 
 ---
 ```
 
-- [ ] **Step 4: Append the original MIT license text to the notice**
+- [ ] **Paso 4: Agregar el texto de la licencia MIT original al aviso**
 
 ```bash
 cat /tmp/gstack-license-qa.txt >> .claude/skills/qa/THIRD-PARTY-NOTICE.md
 rm /tmp/gstack-license-qa.txt
 ```
 
-- [ ] **Step 5: Run the verification check again**
+- [ ] **Paso 5: Volver a correr el chequeo de verificación**
 
-Run: `test -f .claude/skills/qa/SKILL.md && grep -c "^name: qa$" .claude/skills/qa/SKILL.md`
-Expected: `1`
+Ejecutar: `test -f .claude/skills/qa/SKILL.md && grep -c "^name: qa$" .claude/skills/qa/SKILL.md`
+Resultado esperado: `1`
 
-- [ ] **Step 6: Commit**
+- [ ] **Paso 6: Commitear**
 
 ```bash
 git add .claude/skills/qa/
-git commit -m "Vendor gstack's qa skill (MIT) — Playwright visual QA + regression test generation"
+git commit -m "Vendorizar la skill qa de gstack (MIT) — QA visual con Playwright + generación de tests de regresión"
 ```
 
 ---
 
-### Task 10: Vendor the `stop-slop` skill
+### Tarea 10: Vendorizar la skill `stop-slop`
 
-**Files:**
-- Create: `.claude/skills/stop-slop/` (copied from `hardikpandya/stop-slop`, MIT licensed)
-- Create: `.claude/skills/stop-slop/THIRD-PARTY-NOTICE.md`
+**Archivos:**
+- Crear: `.claude/skills/stop-slop/` (copiado de `hardikpandya/stop-slop`, licencia MIT)
+- Crear: `.claude/skills/stop-slop/THIRD-PARTY-NOTICE.md`
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `test -f .claude/skills/stop-slop/SKILL.md && grep -c "^name: stop-slop$" .claude/skills/stop-slop/SKILL.md`
-Expected: FAIL (file doesn't exist)
+Ejecutar: `test -f .claude/skills/stop-slop/SKILL.md && grep -c "^name: stop-slop$" .claude/skills/stop-slop/SKILL.md`
+Resultado esperado: FALLA (el archivo no existe)
 
-- [ ] **Step 2: Clone, copy, and capture the license**
+- [ ] **Paso 2: Clonar, copiar, y guardar la licencia**
 
 ```bash
 git clone --depth 1 https://github.com/hardikpandya/stop-slop.git /tmp/stop-slop-vendor
@@ -648,76 +680,82 @@ cp /tmp/stop-slop-vendor/LICENSE /tmp/stop-slop-license.txt
 rm -rf /tmp/stop-slop-vendor
 ```
 
-- [ ] **Step 3: Write the third-party notice**
+- [ ] **Paso 3: Escribir el aviso de terceros**
 
-Write `.claude/skills/stop-slop/THIRD-PARTY-NOTICE.md`:
+Escribir `.claude/skills/stop-slop/THIRD-PARTY-NOTICE.md`:
 
 ```markdown
-# Third-party notice
+# Aviso de terceros
 
-This directory is vendored from
+Este directorio está vendorizado desde
 [hardikpandya/stop-slop](https://github.com/hardikpandya/stop-slop)
-(MIT licensed, copyright Hardik Pandya), per the design decision in
+(licencia MIT, copyright de Hardik Pandya), según la decisión de diseño
+documentada en
 `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`
-(spec section 2.1: removes "AI tells" from prose — PRs, decision logs, and the
-course/conference material the factory is expected to produce as a byproduct).
+(spec sección 2.1: elimina las "marcas de IA" de la prosa — PRs, registros de
+decisiones, y el material de cursos/charlas que la factory va a producir como
+subproducto).
 
-Original license follows.
+El contenido de la skill (`SKILL.md` y `references/`) se mantiene en su idioma
+original: es contenido vendorizado de upstream, y traducirlo rompería la
+trazabilidad con la fuente y la atribución de licencia (ver spec sección 0).
+
+A continuación, la licencia original.
 
 ---
 ```
 
-- [ ] **Step 4: Append the original MIT license text**
+- [ ] **Paso 4: Agregar el texto de la licencia MIT original**
 
 ```bash
 cat /tmp/stop-slop-license.txt >> .claude/skills/stop-slop/THIRD-PARTY-NOTICE.md
 rm /tmp/stop-slop-license.txt
 ```
 
-- [ ] **Step 5: Run the verification check again**
+- [ ] **Paso 5: Volver a correr el chequeo de verificación**
 
-Run: `test -f .claude/skills/stop-slop/SKILL.md && grep -c "^name: stop-slop$" .claude/skills/stop-slop/SKILL.md`
-Expected: `1`
+Ejecutar: `test -f .claude/skills/stop-slop/SKILL.md && grep -c "^name: stop-slop$" .claude/skills/stop-slop/SKILL.md`
+Resultado esperado: `1`
 
-- [ ] **Step 6: Commit**
+- [ ] **Paso 6: Commitear**
 
 ```bash
 git add .claude/skills/stop-slop/
-git commit -m "Vendor stop-slop skill (MIT) — removes AI writing tells from prose/PRs/course material"
+git commit -m "Vendorizar la skill stop-slop (MIT) — elimina marcas de escritura de IA en prosa/PRs/material de cursos"
 ```
 
 ---
 
-### Task 11: `scripts/bootstrap.sh`
+### Tarea 11: `scripts/bootstrap.sh`
 
-**Files:**
-- Create: `scripts/bootstrap.sh`
-- Test: manual dry run against a temp directory (shown in Step 4 — bootstrap.sh is itself the artifact under test, so the "test" is an end-to-end run against a throwaway target)
+**Archivos:**
+- Crear: `scripts/bootstrap.sh`
+- Prueba: dry run manual contra un directorio temporal (se muestra en el Paso 4 — bootstrap.sh es el propio artefacto bajo prueba, así que la "prueba" es una corrida end-to-end contra un destino descartable)
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `bash -n scripts/bootstrap.sh`
-Expected: FAIL ("No such file or directory")
+Ejecutar: `bash -n scripts/bootstrap.sh`
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the script**
+- [ ] **Paso 2: Crear el script**
 
-Write `scripts/bootstrap.sh`:
+Escribir `scripts/bootstrap.sh`:
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Installs/updates the canonical Software Factory Claude Code configuration
-# into a work repo, without overwriting anything that's already there.
+# Instala/actualiza la configuración canónica de Claude Code de la Software
+# Factory en un repo de trabajo, sin pisar nada de lo que ya exista ahí.
 #
-# Usage: scripts/bootstrap.sh <path-to-target-repo> [project-name]
+# Uso: scripts/bootstrap.sh <ruta-al-repo-destino> [nombre-del-proyecto]
 
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET_DIR="${1:?Usage: bootstrap.sh <path-to-target-repo> [project-name]}"
+TARGET_DIR="${1:?Uso: bootstrap.sh <ruta-al-repo-destino> [nombre-del-proyecto]}"
 PROJECT_NAME="${2:-$(basename "$TARGET_DIR")}"
 
 if [[ ! -d "$TARGET_DIR" ]]; then
-  echo "Target directory does not exist: $TARGET_DIR" >&2
+  echo "El directorio destino no existe: $TARGET_DIR" >&2
   exit 1
 fi
 
@@ -726,10 +764,10 @@ mkdir -p "$TARGET_DIR/.claude/agents" "$TARGET_DIR/.claude/skills" "$TARGET_DIR/
 copy_if_absent() {
   local src="$1" dest="$2"
   if [[ -e "$dest" ]]; then
-    echo "skip (exists):   $dest"
+    echo "ya existe, se omite: $dest"
   else
     cp -r "$src" "$dest"
-    echo "created:         $dest"
+    echo "creado:              $dest"
   fi
 }
 
@@ -740,10 +778,10 @@ copy_if_absent "$SOURCE_DIR/templates/github/pull_request_template.md" "$TARGET_
 for f in CLAUDE.md AGENT_WORKFLOW.md; do
   dest="$TARGET_DIR/$f"
   if [[ -e "$dest" ]]; then
-    echo "skip (exists):   $dest"
+    echo "ya existe, se omite: $dest"
   else
     sed "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" "$SOURCE_DIR/templates/$f.template" > "$dest"
-    echo "created:         $dest (placeholders besides PROJECT_NAME still need filling in)"
+    echo "creado:              $dest (todavía faltan completar los placeholders {{...}} además de PROJECT_NAME)"
   fi
 done
 
@@ -757,22 +795,23 @@ done
 
 cat <<EOF
 
-Done. Remaining manual steps for $TARGET_DIR:
-  1. Fill in the {{...}} placeholders left in CLAUDE.md and AGENT_WORKFLOW.md.
-  2. Add path-specific allow/ask rules to .claude/settings.json for this repo's
-     actual frontend/backend directory layout (the template ships generic-only).
-  3. Install the skills that can't be vendored for licensing reasons
-     (frontend-design, remotion) and configure MCP connectors —
-     see docs/external-setup-checklist.md in softwareFactory.
+Listo. Pasos manuales pendientes para $TARGET_DIR:
+  1. Completar los placeholders {{...}} que quedaron en CLAUDE.md y AGENT_WORKFLOW.md.
+  2. Agregar reglas allow/ask específicas de rutas en .claude/settings.json según
+     la estructura real de directorios frontend/backend de este repo (la plantilla
+     trae sólo lo genérico).
+  3. Instalar las skills que no se pueden vendorizar por motivos de licencia
+     (frontend-design, remotion) y configurar los conectores MCP —
+     ver docs/external-setup-checklist.md en softwareFactory.
 EOF
 ```
 
-- [ ] **Step 3: Make it executable and run the syntax check**
+- [ ] **Paso 3: Hacerlo ejecutable y correr el chequeo de sintaxis**
 
-Run: `chmod +x scripts/bootstrap.sh && bash -n scripts/bootstrap.sh && echo SYNTAX_OK`
-Expected: `SYNTAX_OK`
+Ejecutar: `chmod +x scripts/bootstrap.sh && bash -n scripts/bootstrap.sh && echo SYNTAX_OK`
+Resultado esperado: `SYNTAX_OK`
 
-- [ ] **Step 4: End-to-end dry run against a throwaway directory**
+- [ ] **Paso 4: Dry run end-to-end contra un directorio descartable**
 
 ```bash
 rm -rf /tmp/bootstrap-dry-run && mkdir -p /tmp/bootstrap-dry-run
@@ -787,142 +826,149 @@ grep -q "^# test-project$" /tmp/bootstrap-dry-run/CLAUDE.md
 echo ALL_FILES_PRESENT
 rm -rf /tmp/bootstrap-dry-run
 ```
-Expected: `ALL_FILES_PRESENT` (every `test`/`grep` must pass — `set -e` is not in
-effect here, so run them one at a time if you need to see which one fails)
+Resultado esperado: `ALL_FILES_PRESENT` (cada `test`/`grep` tiene que pasar —
+acá no está activo `set -e`, así que corré cada uno por separado si necesitás
+ver cuál falla)
 
-- [ ] **Step 5: Run it again against the same (now populated) directory to confirm idempotency**
+- [ ] **Paso 5: Volver a correrlo contra el mismo directorio (ya poblado) para confirmar la idempotencia**
 
 ```bash
 mkdir -p /tmp/bootstrap-dry-run-2
 scripts/bootstrap.sh /tmp/bootstrap-dry-run-2 test-project > /tmp/run1.log
 scripts/bootstrap.sh /tmp/bootstrap-dry-run-2 test-project > /tmp/run2.log
-grep -q "skip (exists):" /tmp/run2.log && echo IDEMPOTENT
+grep -q "ya existe, se omite:" /tmp/run2.log && echo IDEMPOTENT
 rm -rf /tmp/bootstrap-dry-run-2 /tmp/run1.log /tmp/run2.log
 ```
-Expected: `IDEMPOTENT`
+Resultado esperado: `IDEMPOTENT`
 
-- [ ] **Step 6: Commit**
+- [ ] **Paso 6: Commitear**
 
 ```bash
 git add scripts/bootstrap.sh
-git commit -m "Add bootstrap.sh: idempotent installer for the canonical Claude config"
+git commit -m "Agregar bootstrap.sh: instalador idempotente de la configuración canónica de Claude"
 ```
 
 ---
 
-### Task 12: `docs/external-setup-checklist.md`
+### Tarea 12: `docs/external-setup-checklist.md`
 
-**Files:**
-- Create: `docs/external-setup-checklist.md`
+**Archivos:**
+- Crear: `docs/external-setup-checklist.md`
 
-This documents the pieces that **cannot** be scripted or vendored: skills under
-licenses that don't permit copying (Frontend Design, Remotion — see "Before you
-start"), and MCP connectors that need live credentials per machine/account.
+Esto documenta las piezas que **no** se pueden scriptear ni vendorizar: skills
+bajo licencias que no permiten copiar (Frontend Design, Remotion — ver "Antes
+de empezar"), y conectores MCP que necesitan credenciales vivas por
+máquina/cuenta.
 
-- [ ] **Step 1: Write the verification check (should fail)**
+- [ ] **Paso 1: Escribir el chequeo de verificación (debería fallar)**
 
-Run: `grep -c "plugin install frontend-design" docs/external-setup-checklist.md`
-Expected: FAIL ("No such file or directory")
+Ejecutar: `grep -c "plugin install frontend-design" docs/external-setup-checklist.md`
+Resultado esperado: FALLA ("No such file or directory")
 
-- [ ] **Step 2: Create the checklist**
+- [ ] **Paso 2: Crear el checklist**
 
-Write `docs/external-setup-checklist.md`:
+Escribir `docs/external-setup-checklist.md`:
 
 ```markdown
-# External setup checklist (per machine / per account)
+# Checklist de instalación externa (por máquina / por cuenta)
 
-These items are **not** vendored or scripted by `scripts/bootstrap.sh` —
-each requires either a license that doesn't permit copying, or live credentials
-tied to a person/machine/account. Run through this once per environment
-(e.g., once on the Mac mini), not once per repo.
+Estos ítems **no** se vendorizan ni se scriptean con `scripts/bootstrap.sh` —
+cada uno requiere una licencia que no permite copiar archivos, o credenciales
+vivas atadas a una persona/máquina/cuenta. Recorré esta lista una vez por
+entorno (p. ej. una vez en la Mac mini), no una vez por repo.
 
-See `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`
-for the rationale behind each choice.
+Ver `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`
+para la justificación detrás de cada elección.
 
-## Skills installed via official channels (not vendored — licensing)
+## Skills que se instalan por canal oficial (no vendorizadas — licencia)
 
-- [ ] **Frontend Design** (Anthropic, official). Anthropic's terms don't permit
-      redistributing the files, so install it directly from the marketplace:
-      `/plugin install frontend-design@claude-plugins-official`
-- [ ] **Remotion**. Distributed under the Remotion License (restrictive for large
-      companies) — install via its own installer rather than copying files:
-      `npx skills add remotion`
+- [ ] **Frontend Design** (Anthropic, oficial). Los términos de Anthropic no
+      permiten redistribuir los archivos, así que se instala directo desde el
+      marketplace: `/plugin install frontend-design@claude-plugins-official`
+- [ ] **Remotion**. Distribuida bajo la Remotion License (restrictiva para
+      empresas grandes) — se instala con su propio instalador en lugar de
+      copiar archivos: `npx skills add remotion`
 
-## MCP connectors (need live credentials — configure per machine)
+## Conectores MCP (necesitan credenciales vivas — configurar por máquina)
 
-- [ ] **GitHub MCP server** — official server; richer and more token-efficient
-      than shelling out to `gh` for PR/issue operations.
-- [ ] **Figma Dev Mode MCP Server** — lets the agent read approved design specs
-      and components directly instead of being told about them in prose.
-- [ ] **Playwright MCP** — gives `qa-visual-agent` native browser tools instead
-      of shelling out to a separate process.
-- [ ] **Documentation MCP** (e.g. Context7) — current library/API docs on demand,
-      instead of guessing from training data or burning tokens on generic web search.
-- [ ] **Telegram via Claude Code Channels** — checkpoint / blocking-question / PR
-      notifications, without the risk surface of a full orchestrator (OpenClaw).
+- [ ] **GitHub MCP server** — servidor oficial; más completo y más eficiente
+      en tokens que invocar `gh` por línea de comandos para PRs e issues.
+- [ ] **Figma Dev Mode MCP Server** — le permite al agente leer specs de diseño
+      aprobadas y componentes directamente, en vez de que se las describan en prosa.
+- [ ] **Playwright MCP** — le da a `qa-visual-agent` herramientas de navegador
+      nativas en lugar de invocar un proceso aparte.
+- [ ] **MCP de documentación** (p. ej. Context7) — documentación actualizada de
+      librerías/APIs bajo demanda, en lugar de adivinar a partir del
+      entrenamiento o gastar tokens en búsquedas web genéricas.
+- [ ] **Telegram vía Claude Code Channels** — notificaciones de checkpoints,
+      preguntas bloqueantes y PRs, sin la superficie de riesgo de un
+      orquestador completo (OpenClaw).
 
-## Explicitly NOT installed (decision recorded, don't re-litigate)
+## Explícitamente NO instalados (decisión registrada, no volver a discutirlo)
 
-- **claude-mem** — a Feb-2026 community audit rated it HIGH risk: its local HTTP
-  API (port 37777) has no authentication, so any process on the machine can read
-  every stored observation (including API keys in cleartext) and inject fake
-  memories. This directly contradicts the least-privilege design in spec section 7.
-  Persistent memory is instead covered by Auto Memory + `CLAUDE.md` + decision logs
-  + versioned specs + GitHub Issues (spec section 3.1) — all native, all auditable.
-- **Sequential Thinking MCP** — redundant with native extended thinking plus the
-  `brainstorming`/`systematic-debugging`/`writing-plans` skills already installed;
-  adding it would spend tokens duplicating something already solved.
-- **UI/UX Pro Max** — redundant with Frontend Design. Revisit later specifically
-  for its accessibility auditor (contrast/ARIA) if that becomes a real need.
-- **NotebookLM MCP** — real token-saving benefit, but no official API (works via
-  browser automation against Google's internal endpoints — fragile, ToS gray area).
-  Revisit once the base flow is stable.
+- **claude-mem** — una auditoría comunitaria de febrero de 2026 lo calificó de
+  riesgo ALTO: su API HTTP local (puerto 37777) no tiene autenticación, así que
+  cualquier proceso de la máquina puede leer todas las observaciones guardadas
+  (incluidas claves de API en texto plano) e inyectar memorias falsas. Esto
+  contradice directamente el diseño de mínimo privilegio de la sección 7 de la
+  spec. La memoria persistente queda cubierta en cambio por Auto Memory +
+  `CLAUDE.md` + registros de decisiones + specs versionadas + GitHub Issues
+  (spec sección 3.1) — todo nativo, todo auditable.
+- **Sequential Thinking MCP** — redundante con el extended thinking nativo más
+  las skills `brainstorming`/`systematic-debugging`/`writing-plans` que ya
+  están instaladas; agregarlo gastaría tokens duplicando algo que ya está resuelto.
+- **UI/UX Pro Max** — redundante con Frontend Design. Revisitarlo más adelante
+  específicamente por su auditor de accesibilidad (contraste/ARIA) si eso se
+  vuelve una necesidad real.
+- **NotebookLM MCP** — ahorro de tokens real, pero sin API oficial (funciona
+  vía automatización de navegador contra endpoints internos de Google — frágil,
+  zona gris de ToS). Revisitarlo una vez que el flujo base esté estable.
 ```
 
-- [ ] **Step 3: Run the verification check again**
+- [ ] **Paso 3: Volver a correr el chequeo de verificación**
 
-Run: `grep -c "plugin install frontend-design" docs/external-setup-checklist.md`
-Expected: `1`
+Ejecutar: `grep -c "plugin install frontend-design" docs/external-setup-checklist.md`
+Resultado esperado: `1`
 
-- [ ] **Step 4: Commit**
+- [ ] **Paso 4: Commitear**
 
 ```bash
 git add docs/external-setup-checklist.md
-git commit -m "Add external setup checklist for skills/connectors that can't be vendored or scripted"
+git commit -m "Agregar checklist de instalación externa para skills/conectores que no se pueden vendorizar ni scriptear"
 ```
 
 ---
 
-## Final check — everything together
+## Chequeo final — todo junto
 
-- [ ] **Run the full verification suite in one pass**
+- [ ] **Correr la batería completa de verificación de una sola vez**
 
 ```bash
 python3 -m json.tool templates/settings.json.template > /dev/null && echo "1: settings.json.template OK"
 test -f templates/CLAUDE.md.template && echo "2: CLAUDE.md.template OK"
 grep -q "APROBADO PARA IMPLEMENTAR" templates/AGENT_WORKFLOW.md.template && echo "3: AGENT_WORKFLOW.md.template OK"
 python3 -c "import yaml; yaml.safe_load(open('templates/github/workflows/ci.yml'))" && echo "4: ci.yml OK"
-grep -q "Preview URL" templates/github/pull_request_template.md && echo "5: pull_request_template.md OK"
+grep -q "URL de preview" templates/github/pull_request_template.md && echo "5: pull_request_template.md OK"
 for a in db-query-agent qa-visual-agent research-agent; do
   test -f ".claude/agents/$a.md" && echo "agent $a OK"
 done
-test -f .claude/skills/qa/SKILL.md && echo "9: qa skill vendored OK"
-test -f .claude/skills/stop-slop/SKILL.md && echo "10: stop-slop skill vendored OK"
-bash -n scripts/bootstrap.sh && echo "11: bootstrap.sh syntax OK"
+test -f .claude/skills/qa/SKILL.md && echo "9: qa skill vendorizada OK"
+test -f .claude/skills/stop-slop/SKILL.md && echo "10: stop-slop skill vendorizada OK"
+bash -n scripts/bootstrap.sh && echo "11: bootstrap.sh sintaxis OK"
 grep -q "plugin install frontend-design" docs/external-setup-checklist.md && echo "12: external-setup-checklist.md OK"
 ```
-Expected: 12 "OK" lines, no errors
+Resultado esperado: 12 líneas "OK", sin errores
 
-- [ ] **Update the spec's checklist (section 7) to reflect what's done**
+- [ ] **Actualizar el checklist de la spec (sección 7) para reflejar lo que se completó**
 
-Open `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`
-and check off every box in section "7. Próximos pasos / artefactos a generar"
-that this plan completed (all of them, except the live-credential connector setup,
-which Task 12 now documents instead of completing).
+Abrir `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`
+y tildar cada casillero de la sección "7. Próximos pasos / artefactos a generar"
+que este plan completó (todos, excepto la configuración de conectores con
+credenciales vivas, que la Tarea 12 ahora documenta en lugar de completar).
 
-- [ ] **Final commit**
+- [ ] **Commit final**
 
 ```bash
 git add docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md
-git commit -m "Mark Phase 1 config artifacts as delivered in the design spec checklist"
+git commit -m "Marcar los artefactos de config de la Fase 1 como entregados en el checklist de la spec de diseño"
 ```
