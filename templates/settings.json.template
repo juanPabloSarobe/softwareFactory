@@ -1,0 +1,60 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Grep",
+      "Glob",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git checkout -b agent/*)",
+      "Bash(npm run lint*)",
+      "Bash(npm test*)",
+      "Bash(npm run build*)",
+      "Bash(npm run dev*)",
+      "Skill(brainstorming)",
+      "Skill(writing-plans)",
+      "Skill(test-driven-development)",
+      "Skill(systematic-debugging)",
+      "Skill(requesting-code-review)",
+      "Skill(qa)",
+      "Task(db-query-agent)",
+      "Task(qa-visual-agent)",
+      "Task(research-agent)",
+      "Write(docs/**)"
+    ],
+    "ask": [
+      "Bash(npm install*)",
+      "Bash(npm uninstall*)",
+      "Edit(**/migrations/**)",
+      "Edit(**/models/**)",
+      "Edit(**/openapi.yaml)",
+      "Edit(**/contracts/**)",
+      "Edit(**/auth/**)",
+      "Edit(tests/**)",
+      "Edit(.github/workflows/**)",
+      "Edit(**/deploy/**)",
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Bash(*prod*deploy*)",
+      "Bash(*--env=production*)",
+      "Bash(psql *)",
+      "Bash(pg_dump *)",
+      "Bash(mysql *)",
+      "Bash(* DROP *)",
+      "Bash(* TRUNCATE *)",
+      "Bash(* DELETE FROM *)",
+      "Read(.env*)",
+      "Read(**/*.pem)",
+      "Read(**/secrets/**)",
+      "Bash(aws *)",
+      "Bash(*route53*)",
+      "Bash(*certbot*)",
+      "Bash(git push * main)",
+      "Bash(git push --force*)",
+      "Bash(git branch -D main)",
+      "Bash(git branch -D master)"
+    ]
+  }
+}

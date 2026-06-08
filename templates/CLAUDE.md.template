@@ -1,0 +1,46 @@
+# {{PROJECT_NAME}}
+
+> Configuración del agente para {{PROJECT_NAME}}, parte del programa Skytrace /
+> Software Factory. Mantené este archivo en menos de ~200 líneas — todo lo
+> extenso va en `docs/`, enlazado desde acá, y se lee bajo demanda (ver
+> "context engineering", spec sección 6).
+
+## Idioma — regla crítica
+
+Comunicate siempre en español: respuestas al usuario, commits, PRs, comentarios
+de código, documentación nueva — cualquier texto en forma de oración. Los
+identificadores técnicos (rutas, nombres de funciones, comandos, variables,
+claves JSON) se mantienen en el idioma que corresponda al stack; la regla
+aplica a la prosa, no a los tokens.
+
+## Qué es este proyecto
+
+{{ONE_PARAGRAPH_DESCRIPTION}}
+
+## Dónde está cada cosa
+
+- Arquitectura y decisiones: `docs/superpowers/specs/`
+- Planes en curso: `docs/superpowers/plans/`
+- Reglas de flujo de trabajo (ramas, PRs, qué necesita aprobación): `AGENT_WORKFLOW.md`
+- Acceso a datos: nunca consultes la base de datos directamente — despachá al
+  subagente `db-query-agent`. Los clientes de BD directos están denegados en
+  `.claude/settings.json` a propósito.
+
+## Stack
+
+{{STACK_SUMMARY}}
+
+## Comandos
+
+- Lint: `{{LINT_COMMAND}}`
+- Test: `{{TEST_COMMAND}}`
+- Build: `{{BUILD_COMMAND}}`
+- Servidor de desarrollo: `{{DEV_COMMAND}}`
+
+## No negociables
+
+- TDD: red, green, refactor. Nunca escribas implementación antes de un test que falle.
+- Todo bug encontrado se convierte en test de regresión — sin excepciones (ver `qa-visual-agent`).
+- Los tests no son tuyos para debilitar. Editar `tests/**` requiere preguntar antes.
+- Nunca trabajes sobre `main`. Crea ramas como `agent/issue-<N>-<descripción-corta>`.
+- Checkpoints chicos: parar en "un PR que funciona", no en "la épica completa".
