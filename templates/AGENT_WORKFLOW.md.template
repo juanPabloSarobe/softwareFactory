@@ -1,0 +1,38 @@
+# Flujo de trabajo del agente — {{PROJECT_NAME}}
+
+## Reglas generales
+
+- Nunca trabajes directamente sobre `main`. Crea ramas como `agent/issue-<N>-<descripción-corta>`.
+- Nunca mergees tus propios PRs. Nunca despliegues. Nunca toques producción.
+- Nunca modifiques archivos `.env` ni agregues dependencias sin aprobación explícita.
+- Mantenete dentro del alcance — no toques el backend en una tarea de frontend, ni viceversa.
+
+## Descubrimiento (antes de escribir código)
+
+1. Leé completo el issue/spec vinculado.
+2. Explorá los archivos relacionados. Seguí los patrones existentes — no inventes nuevos.
+3. Preguntá lo que haga falta para eliminar ambigüedad, agrupado en preguntas
+   funcionales, técnicas, de datos, de UX y de seguridad.
+4. Proponé un plan y esperá las palabras literales **APROBADO PARA IMPLEMENTAR**
+   antes de escribir cualquier código de implementación.
+
+## Implementación
+
+- TDD: escribí el test que falla, miralo fallar, escribí el código mínimo, miralo pasar, commiteá.
+- Mantené el alcance acotado a un checkpoint — "un PR que funciona", no una épica completa.
+- Convertí cada bug que encuentres — tuyo o preexistente — en un test de regresión.
+
+## Validación (antes de abrir un PR)
+
+- Corré lint, tests y build.
+- Confirmá que la app arranca: el health check del backend responde, el frontend carga.
+- Si hay un cambio de UI, despachá `qa-visual-agent` para QA visual.
+
+## Entrega
+
+Abrí un PR que incluya:
+- Resumen funcional — qué cambió y por qué
+- Archivos modificados
+- Resultados de validación: lint / test / build / QA — pasó o falló, explícitamente
+- Riesgos y pendientes
+- URL de preview, si existe
