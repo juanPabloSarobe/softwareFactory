@@ -8,6 +8,27 @@ entorno (p. ej. una vez en la Mac mini), no una vez por repo.
 Ver `docs/superpowers/specs/2026-06-08-claude-config-software-factory-design.md`
 para la justificación detrás de cada elección.
 
+## Skill base (instalar una sola vez, a nivel global — no por proyecto)
+
+- [ ] **Superpowers** (`obra/superpowers`, MIT). Es la base de todo el flujo de
+      trabajo de esta factory: `brainstorming`, `writing-plans`,
+      `subagent-driven-development`, `using-git-worktrees`,
+      `test-driven-development`, `finishing-a-development-branch`, etc. — el
+      ciclo completo de "planificar → aprobar → implementar con revisión en dos
+      etapas → cerrar la rama" que usamos para construir esta misma factory.
+      En `softwareFactory` está vendorizada a nivel de proyecto (commit
+      `8e6c2d3`, en `.claude/skills/`) porque acá es lo que se diseña y
+      documenta — pero **`scripts/bootstrap.sh` no la copia** a los repos de
+      trabajo, y copiarla a mano en cada uno duplicaría el mismo conjunto de
+      skills repo por repo y los iría desincronizando con cada actualización
+      del proyecto original. La instalás **una sola vez, a nivel de usuario**
+      (`~/.claude/skills/`, según el instalador de
+      https://github.com/obra/superpowers): Claude Code resuelve skills tanto
+      a nivel de usuario como de proyecto, así que con esa única instalación
+      global el flujo completo queda disponible automáticamente en
+      `softwareFactory` y en cualquier proyecto real que abras en esa máquina,
+      sin que `bootstrap.sh` tenga que ocuparse de ella.
+
 ## Skills que se instalan por canal oficial (no vendorizadas — licencia)
 
 - [ ] **Frontend Design** (Anthropic, oficial). Los términos de Anthropic no
