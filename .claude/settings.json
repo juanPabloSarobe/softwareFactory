@@ -28,6 +28,7 @@
       "Bash(cp *)",
       "Bash(mv *)",
       "Bash(pwd)",
+      "Bash(cd *)",
       "Bash(dirname *)",
       "Bash(basename *)",
       "Bash(echo *)",
