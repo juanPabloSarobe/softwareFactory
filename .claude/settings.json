@@ -36,7 +36,12 @@
       "Bash(test *)",
       "Bash(source *)",
       "Bash(command -v *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh issue create*)",
+      "Bash(gh issue view *)"
     ],
     "ask": [
       "Bash(rm *)",
