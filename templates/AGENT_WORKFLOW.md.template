@@ -13,7 +13,16 @@
 2. Explorá los archivos relacionados. Seguí los patrones existentes — no inventes nuevos.
 3. Preguntá lo que haga falta para eliminar ambigüedad, agrupado en preguntas
    funcionales, técnicas, de datos, de UX y de seguridad.
-4. Proponé un plan y esperá las palabras literales **APROBADO PARA IMPLEMENTAR**
+4. Antes de proponer el plan, cruzalo contra `.claude/settings.json` y avisá
+   por separado:
+   - **Qué partes van a necesitar tu aprobación en el momento** (tier `ask`) —
+     para que sepas de antemano cuándo va a hacer falta tu presencia.
+   - **Qué partes son operaciones irreversibles bloqueadas de plano** (tier
+     `deny`) — para esas no alcanza con decir "esto no lo puedo hacer": te
+     entrego el script, la migración o el runbook ya escrito y validado, listo
+     para que lo corras vos cuando quieras, con tus propias salvaguardas
+     (backup, ambiente de staging).
+5. Proponé un plan y esperá las palabras literales **APROBADO PARA IMPLEMENTAR**
    antes de escribir cualquier código de implementación.
 
 ## Implementación
