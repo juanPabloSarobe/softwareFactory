@@ -35,9 +35,7 @@ if [[ $PENDING_CLAUDE -gt 0 ]] || [[ $PENDING_AGENT -gt 0 ]]; then
   read -p "¿Completar ahora de forma interactiva? (s/n) " -n 1 -r
   echo ""
 
-  if [[ -z "$REPLY" ]]; then
-    echo "⚠️  Entrada cancelada" >&2
-  elif [[ $REPLY =~ ^[Ss]$ ]]; then
+  if [[ $REPLY =~ ^[Ss]$ ]]; then
     echo ""
     echo "📝 Completando CLAUDE.md..."
     echo ""
@@ -104,13 +102,27 @@ if [[ $PENDING_CLAUDE -gt 0 ]] || [[ $PENDING_AGENT -gt 0 ]]; then
     fi
 
     echo "✅ CLAUDE.md actualizado"
+
+    # Procesar AGENT_WORKFLOW.md si existe
+    if [[ -f "$AGENT_WF" ]] && grep -qF "{{" "$AGENT_WF"; then
+      echo ""
+      echo "📝 Completando AGENT_WORKFLOW.md..."
+      echo ""
+
+      if grep -qF "{{PROJECT_NAME}}" "$AGENT_WF"; then
+        # Reutilizar PROJECT_NAME del comando
+        PROJECT_NAME_FOR_AGENT=$(basename "$PROJECT_DIR")
+        sed -i "" "s|{{PROJECT_NAME}}|$PROJECT_NAME_FOR_AGENT|g" "$AGENT_WF"
+        echo "✅ AGENT_WORKFLOW.md actualizado con PROJECT_NAME"
+      fi
+    fi
   fi
 else
   echo "✅ CLAUDE.md no tiene placeholders pendientes"
 fi
 
 # ============================================================================
-# Sección MCP servers (solo para información)
+# Sección MCP servers interactiva
 # ============================================================================
 
 echo ""
@@ -118,18 +130,38 @@ echo "🔌 MCP Servers (Model Context Protocol — conectores de información)"
 echo "   Se instalan una sola vez a nivel de máquina"
 echo ""
 echo "Opciones disponibles:"
-echo "  - GitHub MCP: leer/crear/comentar issues y PRs directo"
-echo "  - Context7: documentación de librerías/APIs on-demand"
-echo "  - Playwright MCP: navegación y testing automatizado"
-echo "  - Figma Dev Mode: leer specs de diseño directamente"
+echo "  1. GitHub MCP — leer/crear/comentar issues y PRs directo"
+echo "  2. Context7 — documentación de librerías/APIs on-demand"
+echo "  3. Playwright MCP — navegación y testing automatizado"
+echo "  4. Figma Dev Mode — leer specs de diseño directamente"
+echo "  5. Ver más detalles"
 echo ""
-echo "Para instalarlos, ejecutá desde Claude Code:"
-echo "  /mcp install github"
-echo "  /mcp install context7"
-echo "  /mcp install playwright"
-echo ""
-echo "Ver más en: docs/external-setup-checklist.md"
-echo ""
+read -p "¿Instalar algún MCP? (1-5 o s/n) " -n 1 -r
+if [[ -z "$REPLY" ]]; then
+  echo ""
+  echo "⚠️  Entrada cancelada" >&2
+elif [[ $REPLY =~ ^[Ss5]$ ]]; then
+  echo ""
+  cat <<'MCPHELP'
+
+GitHub MCP:
+  /mcp install github
+  Requiere: GitHub personal access token (Settings > Developer settings > Personal access tokens)
+
+Context7 (recomendado para desarrollo):
+  /mcp install context7
+  Requiere: API key (https://context7.ai/)
+
+Playwright MCP:
+  /mcp install playwright
+  Requiere: Bun instalado (https://bun.sh/)
+
+Para más: docs/external-setup-checklist.md
+
+MCPHELP
+else
+  echo ""
+fi
 
 # ============================================================================
 # Resumen final
