@@ -104,12 +104,11 @@ install_superpowers_if_needed
 echo ""
 
 read -p "¿Instalar skills adicionales? (frontend-design, remotion) (s/n) " -n 1 -r
-if [[ $? -ne 0 ]]; then
-  echo ""
-  echo "⚠️  Entrada cancelada" >&2
+echo ""
+if [[ -z "$REPLY" ]]; then
+  echo "⚠️  Entrada cancelada o vacía" >&2
   exit 1
 fi
-echo ""
 
 if [[ $REPLY =~ ^[Ss]$ ]]; then
   install_frontend_design_if_wanted
@@ -122,7 +121,10 @@ fi
 
 echo ""
 echo "✔️  Fase 7: Validar instalación..."
-validate_installation "$TARGET_DIR" || true
+validate_installation "$TARGET_DIR" || {
+  echo ""
+  echo "⚠️  Advertencia: se detectaron problemas post-instalación (revisar arriba)"
+}
 
 # ============================================================================
 # Resumen final
