@@ -61,7 +61,9 @@
       "Skill(brainstorming)",
       "Bash(python3 *)",
       "Bash(python *)",
-      "Bash(osascript *)"
+      "Bash(osascript *)",
+      "Bash(tmp=*)",
+      "Bash(# *)"
     ],
     "ask": [
       "Bash(npm install *)",

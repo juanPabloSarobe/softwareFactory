@@ -113,7 +113,9 @@
       "Skill(superpowers:test-driven-development)",
       "Skill(fewer-permission-prompts)",
       "Skill(update-config)",
-      "Skill(brainstorming)"
+      "Skill(brainstorming)",
+      "Bash(tmp=*)",
+      "Bash(# *)"
     ],
     "ask": [
       "Bash(rm *)",
