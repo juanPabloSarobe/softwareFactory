@@ -10,114 +10,10 @@ check_superpowers_installed() {
   fi
 }
 
-# Guía la instalación interactiva de Superpowers si no existe
-install_superpowers_if_needed() {
-  if check_superpowers_installed; then
-    echo "✅ Superpowers ya instalado globalmente"
-    return 0
-  fi
-
-  echo ""
-  echo "⚠️  Superpowers NO está instalado globalmente"
-  echo ""
-  echo "Superpowers es la base del flujo de trabajo de la factory."
-  echo "Se instala una sola vez a nivel de máquina, no por proyecto."
-  echo ""
-  read -p "¿Deseas instalar Superpowers ahora? (s/n) " -n 1 -r
-  if [[ $? -ne 0 ]]; then
-    echo ""
-    echo "⚠️  Entrada cancelada" >&2
-    return 1
-  fi
-  echo ""
-
-  if [[ $REPLY =~ ^[Ss]$ ]]; then
-    if ! command -v /plugin &> /dev/null; then
-      echo "❌ Error: Claude Code plugin manager no está disponible" >&2
-      echo "   ¿Estás dentro de Claude Code? Visitá: https://claude.com/claude-code" >&2
-      return 1
-    fi
-    echo "Ejecutando: /plugin install superpowers@claude-plugins-official"
-    /plugin install superpowers@claude-plugins-official
-    if check_superpowers_installed; then
-      echo "✅ Superpowers instalado exitosamente"
-      return 0
-    else
-      echo "❌ Falló la instalación. Visitá: https://github.com/obra/superpowers"
-      return 1
-    fi
-  else
-    echo "⚠️  Superpowers es necesario para el flujo completo."
-    return 1
-  fi
-}
-
-# Guía instalación de frontend-design (no se puede vendorizar por licencia)
-install_frontend_design_if_wanted() {
-  echo ""
-  echo "📦 Frontend Design (skill oficial de Anthropic)"
-  echo "   Uso: revisión visual de diseños, auditoría de accesibilidad"
-  echo "   Licencia: no se puede vendorizar, se instala desde marketplace"
-  echo ""
-  read -p "¿Deseas instalar frontend-design? (s/n) " -n 1 -r
-  if [[ $? -ne 0 ]]; then
-    echo ""
-    echo "⚠️  Entrada cancelada" >&2
-    return 1
-  fi
-  echo ""
-
-  if [[ $REPLY =~ ^[Ss]$ ]]; then
-    if ! command -v /plugin &> /dev/null; then
-      echo "❌ Error: Claude Code plugin manager no está disponible" >&2
-      echo "   ¿Estás dentro de Claude Code? Visitá: https://claude.com/claude-code" >&2
-      return 1
-    fi
-    echo "Ejecutando: /plugin install frontend-design@claude-plugins-official"
-    /plugin install frontend-design@claude-plugins-official
-    echo "✅ Frontend Design instalado"
-  else
-    echo "⏭️  Saltear por ahora (lo instalás después si lo necesitás)"
-  fi
-}
-
-# Guía instalación de remotion (licencia restrictiva)
-install_remotion_if_wanted() {
-  # Detectar si Node.js está disponible
-  if ! command -v npx &> /dev/null; then
-    echo ""
-    echo "⏭️  Remotion requiere Node.js + npx"
-    echo "   No encontrado. Visitá: https://nodejs.org/"
-    return 0
-  fi
-
-  echo ""
-  echo "📹 Remotion (generación de videos)"
-  echo "   Uso: crear videos/animaciones programáticamente"
-  echo "   Licencia: se instala con su propio instalador"
-  echo ""
-  read -p "¿Deseas instalar Remotion? (s/n) " -n 1 -r
-  if [[ $? -ne 0 ]]; then
-    echo ""
-    echo "⚠️  Entrada cancelada" >&2
-    return 1
-  fi
-  echo ""
-
-  if [[ $REPLY =~ ^[Ss]$ ]]; then
-    echo "Ejecutando: npx skills add remotion"
-    npx skills add remotion
-    echo "✅ Remotion instalado"
-  else
-    echo "⏭️  Saltear por ahora"
-  fi
-}
-
 # Valida que la instalación básica esté completa
 validate_installation() {
   local target_dir="$1"
 
-  # Validar que target_dir sea proporcionado y sea un directorio válido
   if [[ -z "$target_dir" ]]; then
     echo "❌ Error: target_dir no puede estar vacío" >&2
     return 1
@@ -133,40 +29,28 @@ validate_installation() {
   echo ""
   echo "🔍 Validación post-instalación:"
 
-  if [[ -d "$target_dir/.claude/skills" ]]; then
-    if [[ -r "$target_dir/.claude/skills" ]]; then
-      echo "  ✅ .claude/skills exists and readable"
-    else
-      echo "  ❌ .claude/skills exists but not readable"
-      has_error=1
-    fi
-  else
-    echo "  ❌ .claude/skills missing"
-    has_error=1
-  fi
-
   if [[ -f "$target_dir/CLAUDE.md" ]]; then
     if [[ -r "$target_dir/CLAUDE.md" ]]; then
-      echo "  ✅ CLAUDE.md exists and readable"
+      echo "  ✅ CLAUDE.md existe y es legible"
     else
-      echo "  ❌ CLAUDE.md exists but not readable"
+      echo "  ❌ CLAUDE.md existe pero no es legible"
       has_error=1
     fi
   else
-    echo "  ❌ CLAUDE.md missing"
+    echo "  ❌ CLAUDE.md no encontrado"
     has_error=1
   fi
 
-  if [[ -f "$target_dir/.claude/settings.json" ]]; then
-    if [[ -r "$target_dir/.claude/settings.json" ]]; then
-      echo "  ✅ .claude/settings.json exists and readable"
-    else
-      echo "  ❌ .claude/settings.json exists but not readable"
-      has_error=1
-    fi
+  if [[ -f "$target_dir/AGENT_WORKFLOW.md" ]]; then
+    echo "  ✅ AGENT_WORKFLOW.md existe"
   else
-    echo "  ❌ .claude/settings.json missing"
-    has_error=1
+    echo "  ⚠️  AGENT_WORKFLOW.md no encontrado (opcional pero recomendado)"
+  fi
+
+  if [[ -f "$HOME/.claude/settings.json" ]]; then
+    echo "  ✅ ~/.claude/settings.json (global) existe"
+  else
+    echo "  ⚠️  ~/.claude/settings.json no encontrado — ejecutá install-global.sh"
   fi
 
   return $has_error
