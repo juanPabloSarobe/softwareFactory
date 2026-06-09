@@ -115,6 +115,9 @@
       "Skill(update-config)",
       "Skill(brainstorming)",
       "Bash(tmp=*)",
+      "Bash(TMP=*)",
+      "Bash(TMP_PROJ=*)",
+      "Bash(GIT_DIR=*)",
       "Bash(# *)"
     ],
     "ask": [
