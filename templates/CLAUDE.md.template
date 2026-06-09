@@ -44,3 +44,8 @@ aplica a la prosa, no a los tokens.
 - Los tests no son tuyos para debilitar. Editar `tests/**` requiere preguntar antes.
 - Nunca trabajes sobre `main`. Crea ramas como `agent/issue-<N>-<descripción-corta>`.
 - Checkpoints chicos: parar en "un PR que funciona", no en "la épica completa".
+- `python3 -c "..."` con líneas `# comentario` internas dispara la protección
+  integrada de Claude Code (`\n#` dentro de un argumento = posible inyección),
+  incluso si `Bash(python3 *)` está en `allow`. Para JSON usá `jq + bash`; si
+  python3 es necesario, escribí sin comentarios o volcá el script a un archivo
+  temporal con heredoc.

@@ -9,6 +9,13 @@ CLAUDE_MD="$PROJECT_DIR/CLAUDE.md"
 AGENT_WF="$PROJECT_DIR/AGENT_WORKFLOW.md"
 SETTINGS_JSON="$PROJECT_DIR/.claude/settings.json"
 
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ ! -f "$SOURCE_DIR/scripts/lib/project-permissions.sh" ]]; then
+  echo "❌ No encontré scripts/lib/project-permissions.sh — ejecutá este script desde el repo softwareFactory"
+  exit 1
+fi
+source "$SOURCE_DIR/scripts/lib/project-permissions.sh"
+
 if [[ ! -f "$CLAUDE_MD" ]]; then
   echo "❌ No encontré CLAUDE.md en $PROJECT_DIR"
   echo "   ¿Ejecutaste bootstrap.sh primero?"
@@ -120,6 +127,104 @@ if [[ $PENDING_CLAUDE -gt 0 ]] || [[ $PENDING_AGENT -gt 0 ]]; then
 else
   echo "✅ CLAUDE.md no tiene placeholders pendientes"
 fi
+
+# ============================================================================
+# Fase: Write paths proyecto-específicos
+# ============================================================================
+
+echo ""
+echo "✏️  Write paths: configurar permisos de escritura del proyecto..."
+echo ""
+
+# Directorios no estándar conocidos (se ignoran en la detección automática)
+KNOWN_DIRS=("backend" "frontend" "src" "app" ".git" ".claude" ".github" "docs" "scripts" "templates" "node_modules" "dist" "build" ".next" ".nuxt" "coverage")
+
+DETECTED_PATHS=()
+while IFS= read -r line; do
+  [[ -n "$line" ]] && DETECTED_PATHS+=("$line")
+done < <(detect_write_paths "$PROJECT_DIR")
+
+# Detectar directorios no estándar con código (tienen src/ o package.json)
+NONSTANDARD_EXTRAS=()
+for dir_path in "$PROJECT_DIR"/*/; do
+  dir_name=$(basename "$dir_path")
+  skip=false
+  for known in "${KNOWN_DIRS[@]}"; do
+    [[ "$dir_name" == "$known" ]] && skip=true && break
+  done
+  if [[ "$skip" == "false" ]] && \
+     ([[ -d "$dir_path/src" ]] || [[ -f "$dir_path/package.json" ]] || [[ -f "$dir_path/pyproject.toml" ]]); then
+    NONSTANDARD_EXTRAS+=("$dir_name")
+  fi
+done
+
+# Preguntar por directorios no estándar
+for dir_name in "${NONSTANDARD_EXTRAS[@]+"${NONSTANDARD_EXTRAS[@]}"}"; do
+  read -p "  Detecté '$dir_name/' con código — ¿pre-aprobar escrituras ahí? (s/n) " -n 1 -r
+  echo ""
+  [[ $REPLY =~ ^[Ss]$ ]] && DETECTED_PATHS+=("Write($dir_name/**)")
+done
+
+if [[ ${#DETECTED_PATHS[@]} -eq 0 ]]; then
+  echo "  ℹ️  No detecté directorios de código. Configurá Write paths manualmente en .claude/settings.json"
+else
+  if [[ ! -f "$SETTINGS_JSON" ]]; then
+    echo "  ❌ No encontré $SETTINGS_JSON — ejecutá bootstrap.sh primero"
+  else
+    echo "  Voy a agregar a .claude/settings.json:"
+    for p in "${DETECTED_PATHS[@]+"${DETECTED_PATHS[@]}"}"; do
+      echo "    $p"
+    done
+    echo ""
+    read -p "  ¿Confirmás? (s/n) " -n 1 -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Ss]$ ]]; then
+      # Construir array JSON y mergear con jq (deduplicando, escritura atómica)
+      JSON_ARRAY=$(printf '%s\n' "${DETECTED_PATHS[@]+"${DETECTED_PATHS[@]}"}" | jq -R . | jq -s .)
+      TMP_SETTINGS=$(mktemp)
+      jq --argjson paths "$JSON_ARRAY" '.permissions.allow = (.permissions.allow + $paths | unique)' "$SETTINGS_JSON" > "$TMP_SETTINGS" && mv "$TMP_SETTINGS" "$SETTINGS_JSON"
+      echo "  ✅ Write paths agregados"
+    fi
+  fi
+fi
+
+# ============================================================================
+# Fase: Dev server unificado
+# ============================================================================
+
+echo ""
+echo "🚀 Dev server: verificando configuración..."
+echo ""
+
+DEV_SITUATION=$(detect_dev_server_situation "$PROJECT_DIR")
+
+case "$DEV_SITUATION" in
+  ok)
+    echo "  ✅ Script 'dev' encontrado en el root — no se requiere acción"
+    ;;
+  needs_concurrently)
+    echo "  ⚠️  No hay 'dev' en el root, pero backend/ y frontend/ tienen el suyo."
+    echo "     Con concurrently podés levantar ambos con 'npm run dev' desde la raíz."
+    echo ""
+    echo "     Comando para instalar:"
+    echo "       npm install --save-dev concurrently --prefix \"$PROJECT_DIR\""
+    echo ""
+    echo "     Script a agregar en package.json raíz:"
+    echo '       "dev": "concurrently --names '\''backend,frontend'\'' \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""'
+    echo ""
+    read -p "  ¿Querés que instale concurrently ahora? (s/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Ss]$ ]]; then
+      npm install --save-dev concurrently --prefix "$PROJECT_DIR"
+      echo "  ✅ concurrently instalado. Agregá el script 'dev' al package.json raíz manualmente."
+    fi
+    ;;
+  unknown)
+    echo "  ℹ️  No pude detectar la configuración del dev server."
+    echo "     Revisá que existan scripts 'dev' en tus package.json y/o configurá npm run dev manualmente."
+    ;;
+esac
 
 # ============================================================================
 # Sección: hooks de notificación en ~/.claude/settings.json

@@ -50,6 +50,7 @@ copy_if_absent() {
 }
 
 copy_if_absent "$SOURCE_DIR/templates/settings.json.template" "$TARGET_DIR/.claude/settings.json"
+copy_if_absent "$SOURCE_DIR/templates/POSTINSTALL_CHECKLIST.md.template" "$TARGET_DIR/POSTINSTALL_CHECKLIST.md"
 copy_if_absent "$SOURCE_DIR/templates/github/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml"
 copy_if_absent "$SOURCE_DIR/templates/github/pull_request_template.md" "$TARGET_DIR/.github/pull_request_template.md"
 
