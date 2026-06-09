@@ -122,6 +122,91 @@ Para sync a otra máquina:
 
 ---
 
+## Sección 1d. Plugins del marketplace
+
+Los plugins (Superpowers, frontend-design, remotion) no se pueden instalar desde
+un script bash — requieren `/plugin install` dentro de Claude Code. Lo que
+`install-global.sh` hace es **detectar si están instalados** y, si faltan, mostrar
+el comando exacto que el usuario debe correr dentro de Claude Code.
+
+**Superpowers** (requerido para el flujo de la factory):
+- Detección: `[[ -d "$HOME/.claude/plugins/cache/claude-plugins-official/superpowers" ]]`
+- Si falta, mostrar:
+  ```
+  ⚠️  Superpowers no instalado.
+     Dentro de Claude Code ejecutá: /plugin install superpowers@claude-plugins-official
+  ```
+
+**frontend-design** (opcional, para auditoría visual):
+- Detección: `[[ -d "$HOME/.claude/plugins/cache/claude-plugins-official/frontend-design" ]]`
+- Si falta, mostrar:
+  ```
+  ℹ️  frontend-design no instalado (opcional).
+     Dentro de Claude Code ejecutá: /plugin install frontend-design@claude-plugins-official
+  ```
+
+**remotion** (opcional, para generación de videos):
+- Detección: misma lógica
+- Si falta, mostrar instrucción opcional
+
+### 1e. MCP servers
+
+Los MCP servers (context7, Playwright, Gmail, Calendar) tampoco se configuran
+desde bash — requieren `claude mcp add` o configuración desde Claude Code.
+`install-global.sh` verifica si están configurados y muestra el comando si faltan.
+
+Detección: `claude mcp list 2>/dev/null | grep -q "<nombre>"` para cada MCP.
+
+| MCP | Comando de instalación si falta |
+|-----|--------------------------------|
+| context7 | `claude mcp add context7 -- npx -y @upstash/context7-mcp` |
+| Playwright | `claude mcp add playwright -- npx @playwright/mcp@latest` |
+| Gmail | configurado desde Claude.ai (no via CLI) |
+| Google Calendar | configurado desde Claude.ai (no via CLI) |
+
+Salida si un MCP falta:
+```
+⚠️  MCP context7 no configurado.
+   Ejecutá: claude mcp add context7 -- npx -y @upstash/context7-mcp
+```
+
+Los MCPs de Gmail y Calendar se documentan como pasos manuales en el output
+final (no se pueden verificar via `claude mcp list`).
+
+### 1f. Output final completo de `install-global.sh`
+
+```
+🌐 Instalación global de Software Factory
+   Destino: ~/.claude/
+
+📋 Permisos
+  🔄 sincronizado: ~/.claude/settings.json (+12 allow, +2 deny)
+
+👤 Agentes
+  🔄 actualizado: db-query-agent.md
+  🔄 actualizado: qa-visual-agent.md
+  🔄 actualizado: research-agent.md
+
+🛠️  Skills vendorizadas
+  🔄 actualizado: qa/
+  🔄 actualizado: stop-slop/
+
+🔌 Plugins (requieren Claude Code para instalar)
+  ✅ Superpowers instalado
+  ⚠️  frontend-design no instalado (opcional)
+     → /plugin install frontend-design@claude-plugins-official
+
+🌐 MCP servers
+  ✅ context7 configurado
+  ⚠️  playwright no configurado
+     → claude mcp add playwright -- npx @playwright/mcp@latest
+  ℹ️  Gmail / Google Calendar: configurar desde claude.ai/settings
+
+✅ Instalación global completa.
+```
+
+---
+
 ## Sección 2 — Función `merge_settings()` en `scripts/lib/install-helpers.sh`
 
 Función reutilizable que usan tanto `install-global.sh` como (si se necesita)
@@ -272,12 +357,13 @@ Si en `fichasMontajeApp` se descubre un permiso nuevo:
 
 ## Criterio de éxito
 
-1. `bash scripts/install-global.sh` en Mac Mini instala todo en `~/.claude/`
-2. Un proyecto nuevo con solo `bootstrap.sh` (sin install-global previo) avisa claramente
-3. `bash scripts/install-global.sh` es idempotente: segunda corrida no produce cambios
-4. En MacBook: `git clone + install-global.sh` replica la configuración completa
-5. `fichasMontajeApp` funciona sin `.claude/settings.json` propio (solo Write paths)
-6. Los 8 tests de `test-merge-settings.sh` pasan
+1. `bash scripts/install-global.sh` en Mac Mini instala permisos, agentes y skills en `~/.claude/`
+2. `install-global.sh` detecta y reporta el estado de Superpowers, frontend-design, remotion, context7 y Playwright
+3. Un proyecto nuevo con solo `bootstrap.sh` (sin install-global previo) avisa claramente
+4. `bash scripts/install-global.sh` es idempotente: segunda corrida no modifica nada
+5. En MacBook: `git clone + install-global.sh` replica la configuración completa
+6. `fichasMontajeApp` funciona sin `.claude/settings.json` propio (solo Write paths si los necesita)
+7. Los 8 tests de `test-merge-settings.sh` pasan
 
 ---
 
