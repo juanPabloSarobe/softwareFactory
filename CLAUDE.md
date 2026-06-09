@@ -46,3 +46,8 @@ de trabajo mediante `scripts/bootstrap.sh`, sin pisar lo que cada uno ya tenga.
 - Cada decisión de diseño se documenta primero como spec versionada en
   `docs/superpowers/specs/`, y desde ahí se construye el artefacto correspondiente.
 - Nunca trabajes directo sobre `main`.
+- `python3 -c "..."` con líneas `# comentario` internas dispara la protección
+  integrada de Claude Code (`\n#` dentro de un argumento = posible inyección),
+  incluso si `Bash(python3 *)` está en `allow`. Para JSON usá `jq + bash`; si
+  python3 es necesario, escribí sin comentarios o volcá el script a un archivo
+  temporal con heredoc.
