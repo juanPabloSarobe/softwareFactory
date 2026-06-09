@@ -1,0 +1,112 @@
+# Checklist post-instalación de Software Factory
+
+> Ejecutar este checklist **una sola vez, justo después de instalar la factory**,
+> para asegurarte de que el entorno está listo para flujos autónomos.
+
+---
+
+## 0. Qué hizo el bootstrap automáticamente
+
+El `settings.json` del proyecto ya tiene pre-aprobados:
+
+- **Playwright MCP** (22 tools) — qa-visual-agent corre sin interrupciones
+- **Context7 MCP** — docs de librerías en brainstorming y writing-plans
+- **Gmail y Google Calendar MCP** — flujos de autenticación
+- **Python** — python, python3, pytest, uv run, ruff, black, mypy
+- **npm extendido** — npm test, npm test *, npx *, node --check *
+- **curl, lsof** — health checks y diagnóstico de puertos
+- **Directorios ocultos** — lectura de .claude/ y .github/
+- **Write paths del proyecto** — configurados por el wizard de post-setup.sh
+
+No se requiere acción. Esta sección es solo documentación de estado inicial.
+
+---
+
+## 1. Infraestructura de testing frontend [VERIFICAR]
+
+Si el proyecto usa React/Vue/Svelte, verificar que haya framework de test configurado.
+
+```bash
+cat frontend/package.json | jq '.devDependencies | keys | map(select(test("vitest|jest"))) | length > 0'
+```
+
+Si devuelve `false`:
+
+```bash
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom --prefix frontend
+```
+
+Agregar a `frontend/vite.config.js`:
+```js
+test: {
+  environment: 'jsdom',
+  globals: true,
+  setupFiles: './src/test-setup.js'
+}
+```
+
+**Sin esto:** TDD no funciona en frontend. El agente documenta la desviación y valida solo por QA visual — funciona, pero es deuda técnica.
+
+---
+
+## 2. Conflicto eval/gstack [DECISIÓN DEL OWNER]
+
+Los scripts internos de gstack usan `eval "$(gstack-slug)"`. La regla `"Bash(*eval*)"` en `deny` los bloquea silenciosamente.
+
+**Estado actual:** los scripts de telemetría de gstack fallan, pero el flujo principal de trabajo funciona.
+
+**Opción A (default):** dejarlo como está. Impacto: solo falla la telemetría de gstack.
+
+**Opción B:** cambiar `"Bash(*eval*)"` por reglas más específicas:
+```json
+"Bash(eval $(*))",
+"Bash(eval \"*\")"
+```
+Esto bloquea `eval` con expresiones arbitrarias pero permite `eval "$(gstack-slug)"`.
+
+**Decisión tomada:** [ ] Opción A &nbsp;&nbsp; [ ] Opción B &nbsp;&nbsp; Fecha: ___
+
+---
+
+## 3. Ritual post-primera-sesión [EJECUTAR]
+
+Después de la primera sesión de trabajo real:
+
+```
+/fewer-permission-prompts
+```
+
+Esto escanea los transcripts y propone permisos basados en uso real, cubriendo patrones que el template genérico no puede prever.
+
+**Repetir** cada vez que se agregue una skill nueva al proyecto.
+
+---
+
+## 4. Smoke test de entorno [VERIFICAR]
+
+Correr antes del primer sprint:
+
+```bash
+# Servidores
+npm run dev &
+sleep 5
+curl -s http://localhost:3000/health | jq .   # ajustar puerto según el proyecto
+curl -s http://localhost:5173 | head -5
+
+# Tests
+npm test
+
+# Lint
+npm run lint
+
+# Permisos — esperado: >= 80 entradas
+cat .claude/settings.json | jq '.permissions.allow | length'
+```
+
+---
+
+## 5. Historial
+
+| Fecha | Qué pasó | Resolución |
+|-------|----------|-----------|
+| | | |
