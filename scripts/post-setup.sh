@@ -190,6 +190,43 @@ else
 fi
 
 # ============================================================================
+# Fase: Dev server unificado
+# ============================================================================
+
+echo ""
+echo "🚀 Dev server: verificando configuración..."
+echo ""
+
+DEV_SITUATION=$(detect_dev_server_situation "$PROJECT_DIR")
+
+case "$DEV_SITUATION" in
+  ok)
+    echo "  ✅ Script 'dev' encontrado en el root — no se requiere acción"
+    ;;
+  needs_concurrently)
+    echo "  ⚠️  No hay 'dev' en el root, pero backend/ y frontend/ tienen el suyo."
+    echo "     Con concurrently podés levantar ambos con 'npm run dev' desde la raíz."
+    echo ""
+    echo "     Comando para instalar:"
+    echo "       npm install --save-dev concurrently --prefix \"$PROJECT_DIR\""
+    echo ""
+    echo "     Script a agregar en package.json raíz:"
+    echo '       "dev": "concurrently --names '\''backend,frontend'\'' \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""'
+    echo ""
+    read -p "  ¿Querés que instale concurrently ahora? (s/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Ss]$ ]]; then
+      npm install --save-dev concurrently --prefix "$PROJECT_DIR"
+      echo "  ✅ concurrently instalado. Agregá el script 'dev' al package.json raíz manualmente."
+    fi
+    ;;
+  unknown)
+    echo "  ℹ️  No pude detectar la configuración del dev server."
+    echo "     Revisá que existan scripts 'dev' en tus package.json y/o configurá npm run dev manualmente."
+    ;;
+esac
+
+# ============================================================================
 # Sección: hooks de notificación en ~/.claude/settings.json
 # ============================================================================
 
