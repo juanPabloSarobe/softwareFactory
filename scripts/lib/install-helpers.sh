@@ -171,3 +171,42 @@ validate_installation() {
 
   return $has_error
 }
+
+merge_settings() {
+  local template="$1" target="$2"
+  [[ -z "${1:-}" ]] && { echo "Error: se requiere template" >&2; return 1; }
+  [[ -z "${2:-}" ]] && { echo "Error: se requiere target" >&2; return 1; }
+
+  if [[ ! -f "$target" ]]; then
+    cp "$template" "$target"
+    echo "  ✅ creado: $target"
+    return 0
+  fi
+
+  local before_allow before_deny
+  before_allow=$(jq '.permissions.allow | length' "$target")
+  before_deny=$(jq '.permissions.deny | length' "$target")
+
+  local TMP_FILE
+  TMP_FILE=$(mktemp)
+  jq -s '
+    .[0] as $tmpl | .[1] as $proj |
+    ($proj | del(.permissions)) + {
+      permissions: {
+        allow: ((($tmpl.permissions.allow // []) + ($proj.permissions.allow // [])) | unique),
+        ask:   ((($tmpl.permissions.ask   // []) + ($proj.permissions.ask   // [])) | unique),
+        deny:  ((($tmpl.permissions.deny  // []) + ($proj.permissions.deny  // [])) | unique)
+      }
+    }
+  ' "$template" "$target" > "$TMP_FILE" && mv "$TMP_FILE" "$target"
+
+  local new_allow new_deny
+  new_allow=$(( $(jq '.permissions.allow | length' "$target") - before_allow ))
+  new_deny=$(( $(jq '.permissions.deny | length' "$target") - before_deny ))
+
+  if [[ $new_allow -eq 0 && $new_deny -eq 0 ]]; then
+    echo "  ✅ ya sincronizado: $target"
+  else
+    echo "  🔄 sincronizado: $target (+${new_allow} allow, +${new_deny} deny)"
+  fi
+}
