@@ -9,6 +9,9 @@ CLAUDE_MD="$PROJECT_DIR/CLAUDE.md"
 AGENT_WF="$PROJECT_DIR/AGENT_WORKFLOW.md"
 SETTINGS_JSON="$PROJECT_DIR/.claude/settings.json"
 
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SOURCE_DIR/scripts/lib/project-permissions.sh"
+
 if [[ ! -f "$CLAUDE_MD" ]]; then
   echo "❌ No encontré CLAUDE.md en $PROJECT_DIR"
   echo "   ¿Ejecutaste bootstrap.sh primero?"
@@ -119,6 +122,63 @@ if [[ $PENDING_CLAUDE -gt 0 ]] || [[ $PENDING_AGENT -gt 0 ]]; then
   fi
 else
   echo "✅ CLAUDE.md no tiene placeholders pendientes"
+fi
+
+# ============================================================================
+# Fase: Write paths proyecto-específicos
+# ============================================================================
+
+echo ""
+echo "✏️  Write paths: configurar permisos de escritura del proyecto..."
+echo ""
+
+# Directorios no estándar conocidos (se ignoran en la detección automática)
+KNOWN_DIRS=("backend" "frontend" "src" "app" ".git" ".claude" ".github" "docs" "scripts" "templates" "node_modules" "dist" "build" ".next" ".nuxt" "coverage")
+
+DETECTED_PATHS=()
+while IFS= read -r line; do
+  [[ -n "$line" ]] && DETECTED_PATHS+=("$line")
+done < <(detect_write_paths "$PROJECT_DIR")
+
+# Detectar directorios no estándar con código (tienen src/ o package.json)
+NONSTANDARD_EXTRAS=()
+for dir_path in "$PROJECT_DIR"/*/; do
+  dir_name=$(basename "$dir_path")
+  skip=false
+  for known in "${KNOWN_DIRS[@]}"; do
+    [[ "$dir_name" == "$known" ]] && skip=true && break
+  done
+  if [[ "$skip" == "false" ]] && \
+     ([[ -d "$dir_path/src" ]] || [[ -f "$dir_path/package.json" ]] || [[ -f "$dir_path/pyproject.toml" ]]); then
+    NONSTANDARD_EXTRAS+=("$dir_name")
+  fi
+done
+
+# Preguntar por directorios no estándar
+for dir_name in "${NONSTANDARD_EXTRAS[@]+"${NONSTANDARD_EXTRAS[@]}"}"; do
+  read -p "  Detecté '$dir_name/' con código — ¿pre-aprobar escrituras ahí? (s/n) " -n 1 -r
+  echo ""
+  [[ $REPLY =~ ^[Ss]$ ]] && DETECTED_PATHS+=("Write($dir_name/**)")
+done
+
+if [[ ${#DETECTED_PATHS[@]} -eq 0 ]]; then
+  echo "  ℹ️  No detecté directorios de código. Configurá Write paths manualmente en .claude/settings.json"
+else
+  echo "  Voy a agregar a .claude/settings.json:"
+  for p in "${DETECTED_PATHS[@]+"${DETECTED_PATHS[@]}"}"; do
+    echo "    $p"
+  done
+  echo ""
+  read -p "  ¿Confirmás? (s/n) " -n 1 -r
+  echo ""
+
+  if [[ $REPLY =~ ^[Ss]$ ]]; then
+    # Construir array JSON y mergear con jq
+    JSON_ARRAY=$(printf '%s\n' "${DETECTED_PATHS[@]}" | jq -R . | jq -s .)
+    UPDATED=$(jq --argjson paths "$JSON_ARRAY" '.permissions.allow += $paths' "$SETTINGS_JSON")
+    echo "$UPDATED" > "$SETTINGS_JSON"
+    echo "  ✅ Write paths agregados"
+  fi
 fi
 
 # ============================================================================
