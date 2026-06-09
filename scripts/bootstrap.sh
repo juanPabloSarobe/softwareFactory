@@ -77,12 +77,6 @@ fi
 echo ""
 echo "✔️  Fase 4: Validar instalación..."
 
-if [[ ! -f "$HOME/.claude/settings.json" ]]; then
-  echo ""
-  echo "  ⚠️  ~/.claude/settings.json no encontrado."
-  echo "     Ejecutá primero: bash $SOURCE_DIR/scripts/install-global.sh"
-fi
-
 validate_installation "$TARGET_DIR" || {
   echo ""
   echo "⚠️  Advertencia: se detectaron problemas post-instalación (revisar arriba)"

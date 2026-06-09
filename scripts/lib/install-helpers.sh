@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 # scripts/lib/install-helpers.sh
 
-# Detecta si Superpowers está instalado globalmente
-check_superpowers_installed() {
-  if [[ -d "$HOME/.claude/plugins/cache/claude-plugins-official/superpowers" ]]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
 # Valida que la instalación básica esté completa
 validate_installation() {
   local target_dir="$1"
