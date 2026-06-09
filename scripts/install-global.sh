@@ -5,6 +5,12 @@ SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 source "$SOURCE_DIR/scripts/lib/install-helpers.sh"
 
+if ! command -v jq &>/dev/null; then
+  echo "❌ Error: 'jq' es requerido pero no está instalado." >&2
+  echo "   → brew install jq" >&2
+  exit 1
+fi
+
 echo ""
 echo "🌐 Instalación global de Software Factory"
 echo "   Destino: ~/.claude/"
@@ -20,25 +26,34 @@ echo ""
 # ── Agentes ───────────────────────────────────────────────────────────────────
 echo "👤 Agentes"
 for agent in db-query-agent qa-visual-agent research-agent; do
+  local_src="$SOURCE_DIR/.claude/agents/$agent.md"
+  if [[ ! -f "$local_src" ]]; then
+    echo "  ❌ fuente no encontrada: $agent.md — saltando" >&2
+    continue
+  fi
   if [[ -f "$HOME/.claude/agents/$agent.md" ]]; then
-    cp "$SOURCE_DIR/.claude/agents/$agent.md" "$HOME/.claude/agents/$agent.md"
     echo "  🔄 actualizado: $agent.md"
   else
-    cp "$SOURCE_DIR/.claude/agents/$agent.md" "$HOME/.claude/agents/$agent.md"
     echo "  ✅ instalado: $agent.md"
   fi
+  cp "$local_src" "$HOME/.claude/agents/$agent.md"
 done
 echo ""
 
 # ── Skills vendorizadas ───────────────────────────────────────────────────────
 echo "🛠️  Skills vendorizadas"
 for skill in qa stop-slop; do
+  skill_src="$SOURCE_DIR/.claude/skills/$skill"
+  if [[ ! -d "$skill_src" ]]; then
+    echo "  ❌ fuente no encontrada: $skill/ — saltando" >&2
+    continue
+  fi
   if [[ -d "$HOME/.claude/skills/$skill" ]]; then
     rm -rf "$HOME/.claude/skills/$skill"
-    cp -r "$SOURCE_DIR/.claude/skills/$skill" "$HOME/.claude/skills/$skill"
+    cp -r "$skill_src" "$HOME/.claude/skills/$skill"
     echo "  🔄 actualizado: $skill/"
   else
-    cp -r "$SOURCE_DIR/.claude/skills/$skill" "$HOME/.claude/skills/$skill"
+    cp -r "$skill_src" "$HOME/.claude/skills/$skill"
     echo "  ✅ instalado: $skill/"
   fi
 done
