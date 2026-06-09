@@ -46,7 +46,22 @@
       "Bash(gh pr view *)",
       "Bash(gh pr list *)",
       "Bash(gh issue create*)",
-      "Bash(gh issue view *)"
+      "Bash(gh issue view *)",
+      "Task(claude)",
+      "Task(Explore)",
+      "Task(general-purpose)",
+      "Task(Plan)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Skill(superpowers:using-git-worktrees)",
+      "Skill(superpowers:test-driven-development)",
+      "Skill(fewer-permission-prompts)",
+      "Skill(update-config)",
+      "Skill(brainstorming)",
+      "Bash(python3 *)",
+      "Bash(python *)",
+      "Bash(osascript *)"
     ],
     "ask": [
       "Bash(npm install *)",
