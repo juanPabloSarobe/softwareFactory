@@ -37,6 +37,11 @@
       "Bash(source *)",
       "Bash(command -v *)",
       "Bash(wc *)",
+      "Bash(bash *)",
+      "Bash(mktemp)",
+      "Bash(mktemp -d)",
+      "Bash(rm *)",
+      "Write(templates/**)",
       "Bash(gh pr create*)",
       "Bash(gh pr view *)",
       "Bash(gh pr list *)",
@@ -44,7 +49,6 @@
       "Bash(gh issue view *)"
     ],
     "ask": [
-      "Bash(rm *)",
       "Bash(npm install *)",
       "Bash(npm uninstall *)"
     ],
