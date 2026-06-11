@@ -67,11 +67,11 @@ merge_settings() {
   jq -s '
     .[0] as $tmpl | .[1] as $proj |
     ($proj | del(.permissions)) + {
-      permissions: {
+      permissions: ((($proj.permissions // {}) | del(.allow, .ask, .deny)) + {
         allow: ((($tmpl.permissions.allow // []) + ($proj.permissions.allow // [])) | unique),
         ask:   ((($tmpl.permissions.ask   // []) + ($proj.permissions.ask   // [])) | unique),
         deny:  ((($tmpl.permissions.deny  // []) + ($proj.permissions.deny  // [])) | unique)
-      }
+      })
     }
   ' "$template" "$target" > "$TMP_FILE" && mv "$TMP_FILE" "$target"
 

@@ -100,6 +100,15 @@ run_test "no se crean duplicados en allow" \
   "$(jq '.permissions.allow | length' "$TARGET8")" \
   "$(jq '.permissions.allow | length' "$TEMPLATE")"
 
+# Test 9: campos no-allow/ask/deny dentro de permissions sobreviven (additionalDirectories)
+TARGET9="$TMP/t9/settings.json"
+mkdir -p "$(dirname "$TARGET9")"
+printf '{"permissions":{"additionalDirectories":["/Users/juanpablosarobe"],"allow":[],"ask":[],"deny":[]}}' > "$TARGET9"
+merge_settings "$TEMPLATE" "$TARGET9"
+run_test "additionalDirectories del target sobrevive" \
+  "$(jq -c '.permissions.additionalDirectories' "$TARGET9")" \
+  '["/Users/juanpablosarobe"]'
+
 echo ""
 echo "Resultados: $PASS ✅  $FAIL ❌"
 [[ $FAIL -eq 0 ]] && exit 0 || exit 1
