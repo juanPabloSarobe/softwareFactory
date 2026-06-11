@@ -30,7 +30,7 @@ echo ""
 # ============================================================================
 
 echo "📁 Fase 1: Crear estructura de directorios..."
-mkdir -p "$TARGET_DIR/.claude/agents" "$TARGET_DIR/.claude/skills" "$TARGET_DIR/.github/workflows"
+mkdir -p "$TARGET_DIR/.claude" "$TARGET_DIR/.github/workflows"
 
 # ============================================================================
 # FASE 2: Copiar plantillas (skip-if-exists)
@@ -49,7 +49,6 @@ copy_if_absent() {
   fi
 }
 
-copy_if_absent "$SOURCE_DIR/templates/settings.json.template" "$TARGET_DIR/.claude/settings.json"
 copy_if_absent "$SOURCE_DIR/templates/POSTINSTALL_CHECKLIST.md.template" "$TARGET_DIR/POSTINSTALL_CHECKLIST.md"
 copy_if_absent "$SOURCE_DIR/templates/github/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml"
 copy_if_absent "$SOURCE_DIR/templates/github/pull_request_template.md" "$TARGET_DIR/.github/pull_request_template.md"
@@ -70,64 +69,14 @@ else
   echo "  ⏭️  ya existe, se omite: $TARGET_DIR/AGENT_WORKFLOW.md"
 fi
 
-# ============================================================================
-# FASE 4: Vendorizar skills locales (qa, stop-slop)
-# ============================================================================
-
-echo ""
-echo "🛠️  Fase 4: Vendorizar skills locales..."
-
-for skill in qa stop-slop; do
-  copy_if_absent "$SOURCE_DIR/.claude/skills/$skill" "$TARGET_DIR/.claude/skills/$skill"
-done
 
 # ============================================================================
-# FASE 5: Vendorizar agentes
+# FASE 4: Validar
 # ============================================================================
 
 echo ""
-echo "👤 Fase 5: Vendorizar agentes..."
+echo "✔️  Fase 4: Validar instalación..."
 
-for agent in db-query-agent qa-visual-agent research-agent; do
-  copy_if_absent "$SOURCE_DIR/.claude/agents/$agent.md" "$TARGET_DIR/.claude/agents/$agent.md"
-done
-
-# ============================================================================
-# FASE 6: Detectar/instalar dependencias globales (NUEVO)
-# ============================================================================
-
-echo ""
-echo "🌐 Fase 6: Verificar dependencias globales..."
-echo "   (Se instalan una sola vez a nivel de máquina, no por proyecto)"
-echo ""
-
-install_superpowers_if_needed
-echo ""
-
-# Si hay TTY disponible, pregunta. Si no, por defecto no instala.
-if [[ -t 0 ]]; then
-  read -p "¿Instalar skills adicionales? (frontend-design, remotion) (s/n) " -n 1 -r
-  echo ""
-  if [[ -z "$REPLY" ]]; then
-    echo "⚠️  Entrada cancelada o vacía" >&2
-    exit 1
-  fi
-
-  if [[ $REPLY =~ ^[Ss]$ ]]; then
-    install_frontend_design_if_wanted
-    install_remotion_if_wanted
-  fi
-else
-  echo "⏭️  Modo no-TTY detectado (p.ej., CI/CD). Saltando instalación de skills opcionales."
-  echo "   Podés instalarlos luego manualmente en Claude Code con: /plugin install <skill>"
-fi
-
-# ============================================================================
-# FASE 7: Validar
-# ============================================================================
-
-echo ""
-echo "✔️  Fase 7: Validar instalación..."
 validate_installation "$TARGET_DIR" || {
   echo ""
   echo "⚠️  Advertencia: se detectaron problemas post-instalación (revisar arriba)"
@@ -141,31 +90,19 @@ cat <<'EOF'
 
 ✅ Bootstrap completo.
 
-📋 Próximos pasos manuales:
+📋 Próximos pasos:
 
   1. COMPLETAR PLACEHOLDERS en CLAUDE.md y AGENT_WORKFLOW.md
      - {{ONE_PARAGRAPH_DESCRIPTION}}: qué es el proyecto en una línea
      - {{STACK_SUMMARY}}: tech stack (Node/React/Python/etc)
      - {{LINT_COMMAND}}, {{TEST_COMMAND}}, {{BUILD_COMMAND}}, {{DEV_COMMAND}}
 
+  2. CONFIGURAR WRITE PATHS del proyecto (opcional)
      Ejecutá: scripts/post-setup.sh
-     (O editá a mano — el checklist es interactivo)
+     (Auto-detecta backend/, frontend/, src/ y agrega los Write paths al proyecto)
 
-  2. CONFIGURAR REGLAS DE PERMISOS en .claude/settings.json
-     - Las reglas genéricas ya están. Personalizá con rutas reales del proyecto
-       (p. ej. si tenés backend/ y frontend/, ajustá las reglas de Edit())
-
-     Ver: https://claude.ai/claude-code/docs/reference/settings#permissions
-
-  3. INSTALAR MCP SERVERS (por máquina, no por proyecto)
-     - GitHub MCP: `/mcp install github`
-     - Context7: `/mcp install context7` (para docs de librerías)
-     - Otros: ver docs/external-setup-checklist.md
-
-     Ejecutá nuevamente: scripts/post-setup.sh
-     (Te guiará paso a paso)
-
-Más info: docs/external-setup-checklist.md
+  3. Si no corriste install-global.sh todavía:
+     bash scripts/install-global.sh
 
 EOF
 
