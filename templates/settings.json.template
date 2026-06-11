@@ -20,6 +20,7 @@
       "Bash(tail *)",
       "Bash(sed -e *)",
       "Bash(sed -i *)",
+      "Bash(sed -n *)",
       "Bash(tree *)",
       "Bash(jq *)",
       "Bash(diff *)",
